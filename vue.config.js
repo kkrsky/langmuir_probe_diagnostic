@@ -1,4 +1,4 @@
-const Dotenv = require("dotenv-webpack"); //APIなどの環境変数をローカルに保存、process.env.OOOで取得可能
+// const Dotenv = require("dotenv-webpack"); //APIなどの環境変数をローカルに保存、process.env.OOOで取得可能
 
 module.exports = {
   publicPath: "./",
@@ -11,7 +11,7 @@ module.exports = {
       },
     },
   },
-  configureWebpack: {
-    plugins: [new Dotenv()],
-  },
+  // configureWebpack: {
+  //   plugins: [new Dotenv()],
+  // },
 };

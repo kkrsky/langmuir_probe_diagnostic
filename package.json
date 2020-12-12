@@ -1,17 +1,13 @@
 {
-  "name": "jp.opal.bike.app",
+  "name": "langmuir_probe_diagnostic",
   "version": "1.0.0",
   "private": true,
-  "description": "A sample Apache Cordova application that responds to the deviceready event.",
+  "description": "langmuir_probe_diagnostic",
   "author": {
-    "name": "Apache Cordova Team"
+    "name": "Ryohei"
   },
   "scripts": {
     "build": "vue-cli-service build",
-    "android": "npm run build && cordova run android",
-    "android -d": "npm run build && cordova run android -device",
-    "android -e": "npm run build && cordova run android -emulator",
-    "ios": "npm run build && cordova run ios",
     "dev": "vue-cli-service serve",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
@@ -49,7 +45,7 @@
     "last 2 versions",
     "not dead"
   ],
-  "_id": "jp.opal.bike.app@1.0.0",
+  "_id": "langmuir_probe_diagnostic@1.0.0",
   "cordova": {
     "plugins": {
       "cordova-plugin-whitelist": {},
@@ -64,9 +60,9 @@
       "ios"
     ]
   },
-  "displayName": "HelloCordova",
+  "displayName": "langmuir_probe_diagnostic",
   "keywords": [
-    "ecosystem:cordova"
+    "langmuir_probe_diagnostic:cordova"
   ],
   "license": "Apache-2.0",
   "readme": "ERROR: No README data found!"
