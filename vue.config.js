@@ -2,7 +2,7 @@ const Dotenv = require("dotenv-webpack"); //APIなどの環境変数をローカ
 
 module.exports = {
   publicPath: "./",
-  outputDir: "www",
+  outputDir: "docs",
   transpileDependencies: ["vuetify"],
   css: {
     loaderOptions: {
