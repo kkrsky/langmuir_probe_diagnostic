@@ -216,16 +216,23 @@ export default {
           // this.addChartArryData(addChartObj);
 
           //create file obj
-          let obj = {
-            name: name,
-            fileName: fileName,
-            rawText: rawText,
-            formatText: formatTextArry,
-            scatterData: scatterData,
-            data: null,
-          };
+          if (formatTextArry.length !== 0) {
+            let obj = {
+              name: name,
+              fileName: fileName,
+              rawText: rawText,
+              formatText: formatTextArry,
+              scatterData: scatterData,
+              data: null,
+            };
 
-          this.files.push(obj);
+            this.files.push(obj);
+          } else {
+            window.alert(
+              "正しいデータフォーマットのファイルを入力してください。:" +
+                fileName
+            );
+          }
         };
         readerArry[i].readAsText(currentFile);
       }
