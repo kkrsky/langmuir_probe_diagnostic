@@ -1,6 +1,11 @@
 <template>
+  <!-- <div id="ChartContainer"> -->
   <div id="ChartContainer">
-    <div id="canvas-wrapper"></div>
+    <div class="each-chart-grid">
+      <div :id="'canvas-wrapper-' + file.name" class="graph-container"></div>
+      <div class="result-container">result{{ file.name }}</div>
+      <div class="setting-container">setting{{ file.name }}</div>
+    </div>
   </div>
 </template>
 
@@ -70,9 +75,9 @@ export default {
     },
     //APIs
     createChartVI({ chartName, labelName, setDataArry }) {
-      console.log(chartName, labelName);
+      //   console.log(chartName, labelName)
       let chartVI_ctx = window.document
-        .getElementById(chartName)
+        .getElementById("canvas-" + chartName)
         .getContext("2d");
       let chartData = new Chart(chartVI_ctx, {
         type: "scatter",
@@ -180,12 +185,16 @@ export default {
       }
     },
     createCanvasElement({ chartName }) {
-      let insertElm = window.document.getElementById("canvas-wrapper");
-      //   console.log(insertElm);
+      let insertElm = window.document.getElementById(
+        "canvas-wrapper-" + chartName
+      );
+      console.log("insertElm", insertElm);
       //   let newElm = window.document.createElement("div");
       let newElm = window.document.createElement("canvas");
-      newElm.className = chartName;
-      newElm.id = chartName;
+      newElm.className = "canvas-chart";
+      newElm.id = "canvas-" + chartName;
+      newElm.style.height = "50vh";
+      newElm.style.width = "50vh";
       insertElm.appendChild(newElm);
     },
   },
@@ -198,15 +207,38 @@ export default {
 };
 </script>
 
-<style lang="scss">
+<style lang="scss" scoped>
 #ChartContainer {
   display: block;
-  height: 100%;
-  #canvas-wrapper {
-    * {
-      height: $__graph-height !important;
-      width: 50vh !important;
-      //   height: 50vh !important;
+  //   height: 100%;
+  height: 52vh;
+  width: 100%;
+  .each-chart-grid {
+    height: 100%;
+    display: grid;
+    grid-template:
+      "graph  result" 50%
+      "graph  setting" 50%
+      / #{$__graph-height} 1fr;
+    .graph-container {
+      grid-area: graph;
+      justify-self: flex-start;
+      align-self: center;
+      height: 100%;
+      width: 100%;
+    }
+    .result-container {
+      grid-area: result;
+      justify-self: flex-start;
+      align-self: center;
+      //   font-size: 40px;
+      height: 100%;
+    }
+    .setting-container {
+      grid-area: setting;
+      justify-self: flex-start;
+      align-self: center;
+      height: 100%;
     }
   }
 }

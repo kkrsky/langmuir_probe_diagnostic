@@ -29,6 +29,7 @@
     <top-header :title="title" :left="leftBtn" :right="rightBtn"></top-header>
     <v-main>
       <p>main</p>
+      <table-component></table-component>
       <!-- Provides the application the proper gutter -->
       <!-- <p>this is tes dev</p> -->
       <!-- file input -->
@@ -36,16 +37,17 @@
         <h3>グラフ</h3>
         <span>{{ files.length }}ファイル</span>
         <div class="TopCalc-container">
-          <div class="graph-container">
-            <!-- <chart-container :files="files"></chart-container> -->
+          <!-- <chart-container :files="files"></chart-container> -->
 
-            <div class="each-chart" v-for="file in files" :key="file.fileName">
-              <chart-container :file="file"></chart-container>
-            </div>
-            <v-divider></v-divider>
+          <div v-for="file in files" :key="file.fileName">
+            <chart-container :file="file"></chart-container>
+            <!-- <div class="each-chart">
+              <div :id="'canvas-wrapper-' + file.name"></div>
+              <div class="result-container">{{ file.name }}</div>
+              <div class="setting-container">{{ file.name }}</div>
+            </div> -->
           </div>
-          <div class="result-container">bb</div>
-          <div class="setting-container">aa</div>
+          <v-divider></v-divider>
         </div>
       </div>
       <div id="TopSetting" v-show="isShowDisplaySetting">
@@ -109,6 +111,7 @@ import initData from "../init/initData.js";
 import TopFooter from "../components/TopFooter";
 import TopHeader from "../components/TopHeader";
 import ChartContainer from "../components/ChartContainer";
+import TableComponent from "../components/TableComponent";
 
 export default {
   data() {
@@ -487,6 +490,7 @@ export default {
     TopHeader,
     TopFooter,
     ChartContainer,
+    TableComponent,
   },
 };
 </script>
@@ -500,38 +504,6 @@ export default {
   .TopCalc-container {
     height: 52vh;
     overflow: scroll;
-
-    display: grid;
-    grid-template:
-      "graph  result" 50%
-      "graph  setting" 50%
-      / #{$__graph-height} 1fr;
-
-    .title-container {
-      grid-area: title;
-      justify-self: flex-start;
-      align-self: center;
-      font-size: 1rem;
-    }
-    .graph-container {
-      grid-area: graph;
-      justify-self: flex-start;
-      align-self: center;
-      height: 100%;
-    }
-    .result-container {
-      grid-area: result;
-      justify-self: flex-start;
-      align-self: center;
-      font-size: 40px;
-      height: 100%;
-    }
-    .setting-container {
-      grid-area: setting;
-      justify-self: flex-start;
-      align-self: center;
-      height: 100%;
-    }
   }
 }
 #TopSetting {
