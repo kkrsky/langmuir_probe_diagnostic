@@ -4,7 +4,7 @@ node_modules
 /www
 /platforms
 /plugins
-
+package-lock.json
 
 # local env files
 .env.local
