@@ -2,15 +2,20 @@
   <!-- <div id="ChartContainer"> -->
   <div id="ChartContainer">
     <div class="each-chart-grid">
+      <div class="id-container">{{ file.id }}</div>
       <div :id="'canvas-wrapper-' + file.name" class="graph-container"></div>
-      <div class="result-container">result{{ file.name }}</div>
       <div class="setting-container">setting{{ file.name }}</div>
+      <div class="result-container">
+        result{{ file.name }}
+        <table-component></table-component>
+      </div>
     </div>
   </div>
 </template>
 
 <script>
 // import TopFooter from "@/components/TopFooter.vue";
+import TableComponent from "./TableComponent";
 
 export default {
   props: {
@@ -203,7 +208,9 @@ export default {
   mounted() {
     this.initChart();
   },
-  components: {},
+  components: {
+    TableComponent,
+  },
 };
 </script>
 
@@ -216,23 +223,35 @@ export default {
   .each-chart-grid {
     height: 100%;
     display: grid;
+    border: solid 1px black;
     grid-template:
-      "graph  result" 50%
-      "graph  setting" 50%
-      / #{$__graph-height} 1fr;
+      "id graph  setting" 50%
+      "id graph  result" 50%
+      / 2% #{$__graph-height} 1fr;
+
+    .id-container {
+      grid-area: id;
+      justify-self: center;
+      align-self: center;
+      // border: solid 1px black;
+      // height: 100%;
+      // width: 100%;
+    }
     .graph-container {
       grid-area: graph;
-      justify-self: flex-start;
+      justify-self: center;
       align-self: center;
+      border: solid 1px black;
       height: 100%;
       width: 100%;
     }
     .result-container {
       grid-area: result;
-      justify-self: flex-start;
+      justify-self: center;
       align-self: center;
       //   font-size: 40px;
       height: 100%;
+      overflow: scroll;
     }
     .setting-container {
       grid-area: setting;

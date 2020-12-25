@@ -1,7 +1,6 @@
 <template>
-  <div>
+  <div id="TableComponent">
     <vue-good-table :columns="columns" :rows="rows" />
-    aaaa
   </div>
 </template>
 
@@ -16,74 +15,51 @@ export default {
        */
       columns: [
         {
-          label: "id",
-          field: "id",
+          label: "Iis(fit) [mA]",
+          field: "Iis_fit",
+          type: "number",
+          html: true,
+        },
+        {
+          label: "Ies(calc) [mA]",
+          field: "Ies_calc",
+        },
+        {
+          label: "Te [eV]",
+          field: "Te",
           type: "number",
         },
         {
-          label: "Name",
-          field: "name",
-        },
-        {
-          label: "Age",
-          field: "age",
+          label: " Ne(Iis)[cm-3]",
+          field: "Ne_Iis",
           type: "number",
         },
         {
-          label: "Created On",
-          field: "createdAt",
-          type: "date",
-          dateInputFormat: "YYYY-MM-DD",
-          dateOutputFormat: "MMM Do YY",
+          label: "Ne(Ies)[cm-3]",
+          field: "Ne_Ies",
+          type: "number",
+        },
+
+        {
+          label: "Vf [V]",
+          field: "Vf",
+          type: "number",
         },
         {
-          label: "Percent",
-          field: "score",
-          type: "percentage",
+          label: "Vf [V]",
+          field: "Vs_calc",
+          type: "number",
         },
       ],
       rows: [
         {
-          id: 1,
-          name: "John",
-          age: 20,
-          createdAt: "201-10-31:9: 35 am",
-          score: 0.03343,
-        },
-        {
-          id: 2,
-          name: "Jane",
-          age: 24,
-          createdAt: "2011-10-31",
-          score: 0.03343,
-        },
-        {
-          id: 3,
-          name: "Susan",
-          age: 16,
-          createdAt: "2011-10-30",
-          score: 0.03343,
-        },
-        {
-          id: 4,
-          name: "Chris",
-          age: 55,
-          createdAt: "2011-10-11",
-          score: 0.03343,
-        },
-        {
-          id: 5,
-          name: "Dan",
-          age: 40,
-          createdAt: "2011-10-21",
-          score: 0.03343,
-        },
-        {
-          id: 6,
-          name: "John",
-          age: 20,
-          createdAt: "2011-10-31",
-          score: 0.03343,
+          Iis_fit: 1,
+          Ies_calc: 0.03343,
+          Te: 20,
+          Ne_Iis: 0.03343,
+          Ne_Ies: 0.03343,
+          Vf: 0.03343,
+          Vs_calc: 0.03343,
         },
       ],
 
@@ -101,4 +77,8 @@ export default {
 };
 </script>
 
-<style lang="scss"></style>
+<style lang="scss">
+#TableComponent {
+  width: 100%;
+}
+</style>

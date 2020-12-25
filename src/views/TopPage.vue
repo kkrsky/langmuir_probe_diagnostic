@@ -39,7 +39,7 @@
         <div class="TopCalc-container">
           <!-- <chart-container :files="files"></chart-container> -->
 
-          <div v-for="file in files" :key="file.fileName">
+          <div v-for="file in files" :key="file.id">
             <chart-container :file="file"></chart-container>
             <!-- <div class="each-chart">
               <div :id="'canvas-wrapper-' + file.name"></div>
@@ -201,6 +201,7 @@ export default {
         readerArry[i] = new FileReader();
         readerArry[i].onload = (e) => {
           //text format
+
           let chartName = "chartVI";
           let fileName = currentFile.name;
           let name = fileName.split(".txt").shift();
@@ -220,7 +221,17 @@ export default {
 
           //create file obj
           if (formatTextArry.length !== 0) {
+            let id = null;
+            if (this.files.length === 0) {
+              id = 1;
+            } else {
+              let maxIdObj = this.files.reduce((acc, val) => {
+                return acc.id > val.id ? acc : val;
+              });
+              id = maxIdObj.id + 1;
+            }
             let obj = {
+              id: id,
               name: name,
               fileName: fileName,
               rawText: rawText,
