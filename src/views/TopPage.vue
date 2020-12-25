@@ -30,9 +30,10 @@
     <v-main>
       <p>main</p>
       <table-component></table-component>
-      <!-- Provides the application the proper gutter -->
-      <!-- <p>this is tes dev</p> -->
-      <!-- file input -->
+      <!-- ---------- -->
+      <!-- TopCalc -->
+      <!-- ---------- -->
+
       <div id="TopCalc" v-if="isShowDisplayCalc">
         <h3>グラフ</h3>
         <span>{{ files.length }}ファイル</span>
@@ -40,16 +41,30 @@
           <!-- <chart-container :files="files"></chart-container> -->
 
           <div v-for="file in files" :key="file.id">
-            <chart-container :file="file"></chart-container>
-            <!-- <div class="each-chart">
-              <div :id="'canvas-wrapper-' + file.name"></div>
-              <div class="result-container">{{ file.name }}</div>
-              <div class="setting-container">{{ file.name }}</div>
-            </div> -->
+            <chart-container
+              :file="file"
+              @show-scope-graph="showScopeGraph($event)"
+            ></chart-container>
           </div>
-          <v-divider></v-divider>
         </div>
       </div>
+
+      <!-- ---------- -->
+      <!-- ScopedGraphViewer -->
+      <!-- ---------- -->
+      <div id="ScopedGraphViewer" v-if="true">
+        <!-- <div id="ScopedGraphViewer" v-if="isShowScopedGraphViewer"> -->
+
+        <h3>拡大表示</h3>
+        <chart-container
+          :file="scopedFile"
+          @destroy="isShowScopedGraphViewer = !isShowScopedGraphViewer"
+        ></chart-container>
+      </div>
+
+      <!-- ---------- -->
+      <!-- TopSetting -->
+      <!-- ---------- -->
       <div id="TopSetting" v-show="isShowDisplaySetting">
         <div id="files">
           <h3>ファイル操作</h3>
@@ -138,10 +153,15 @@ export default {
         // propItems: {},
         // addCss: {},
       },
-      isShowDrower: false,
+
       /**
        * //methods data
        */
+      ////////////////////////////
+      //drowper
+      ////////////////////////////
+      isShowDrower: false,
+
       ////////////////////////////
       //files
       ////////////////////////////
@@ -168,6 +188,7 @@ export default {
       ////////////////////////////
       isShowDisplaySetting: true,
       isShowDisplayCalc: true,
+      isShowScopedGraphViewer: false,
       areaOfProbe: 0.097075213,
       gasType: ["Ar", "H2", "Other"],
       gasTypeMassSelect: 6.63385357335952 * Math.pow(10, -26),
@@ -180,6 +201,7 @@ export default {
       ////////////////////////////
       //Top calc data
       ////////////////////////////
+      scopedFile: null,
     };
   },
   computed: {},
@@ -201,7 +223,7 @@ export default {
         readerArry[i] = new FileReader();
         readerArry[i].onload = (e) => {
           //text format
-
+          let attribute = "normal"; //normal:通常,scoped:拡大表示
           let chartName = "chartVI";
           let fileName = currentFile.name;
           let name = fileName.split(".txt").shift();
@@ -232,6 +254,7 @@ export default {
             }
             let obj = {
               id: id,
+              attribute: attribute,
               name: name,
               fileName: fileName,
               rawText: rawText,
@@ -490,6 +513,17 @@ export default {
     //init
 
     //action
+    showScopeGraph(scopedFile) {
+      console.log("graph", scopedFile);
+
+      //設定変更
+      scopedFile.name = scopedFile.name + "-scoped";
+      scopedFile.attribute = "scoped";
+
+      //更新
+      this.scopedFile = scopedFile;
+      this.isShowScopedGraphViewer = !this.isShowScopedGraphViewer;
+    },
   },
   watch: {},
   beforeCreate() {},
@@ -516,6 +550,14 @@ export default {
     height: 52vh;
     overflow: scroll;
   }
+}
+#ScopedGraphViewer {
+  // position: absolute;
+  // background-color: white;
+  padding: 10px 0;
+  border: solid 1px #bbb;
+  border-radius: 2%;
+  // height: 100%;
 }
 #TopSetting {
   #files {

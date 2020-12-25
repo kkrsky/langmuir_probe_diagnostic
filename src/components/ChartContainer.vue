@@ -1,15 +1,110 @@
 <template>
   <!-- <div id="ChartContainer"> -->
   <div id="ChartContainer">
-    <div class="each-chart-grid">
-      <div class="id-container">{{ file.id }}</div>
-      <div :id="'canvas-wrapper-' + file.name" class="graph-container"></div>
-      <div class="setting-container">setting{{ file.name }}</div>
-      <div class="result-container">
-        result{{ file.name }}
-        <table-component></table-component>
-      </div>
-    </div>
+    <v-row justify="center">
+      <v-dialog
+        v-model="isShowDialog"
+        fullscreen
+        hide-overlay
+        transition="dialog-bottom-transition"
+      >
+        <template v-slot:activator="{ on, attrs }">
+          <!-- ------------- -->
+          <!-- normal viewer -->
+          <!-- ------------- -->
+          <div class="each-chart-grid">
+            <div class="id-container">{{ file.id }}</div>
+            <div
+              :id="'canvas-wrapper-' + file.name"
+              class="graph-container"
+            ></div>
+            <div class="setting-container">
+              <h3>file: {{ file.name }}</h3>
+              <p>graph: {{ display.currentDisplayGraphName }}</p>
+              <div class="setting-router-container">
+                <v-btn icon color="gray" @click="showNextGraph()">
+                  <v-icon>mdi-arrow-left-bold-circle</v-icon>
+                </v-btn>
+                <v-btn icon color="gray" @click="showNextGraph()">
+                  <v-icon>mdi-arrow-right-bold-circle</v-icon>
+                </v-btn>
+                <v-btn
+                  icon
+                  color="gray"
+                  @click="initDialogGraph()"
+                  v-if="file.attribute === 'normal'"
+                  v-bind="attrs"
+                  v-on="on"
+                >
+                  <v-icon>mdi-arrow-top-right-bottom-left-bold</v-icon>
+                </v-btn>
+                <v-btn
+                  icon
+                  color="gray"
+                  @click="destroyGraph()"
+                  v-if="file.attribute === 'scoped'"
+                >
+                  <v-icon>mdi-close-circle</v-icon>
+                </v-btn>
+              </div>
+            </div>
+            <div class="result-container">
+              result{{ file.name }}
+              <table-component></table-component>
+            </div>
+          </div>
+          <!-- ------------- -->
+          <!-- normal viewer -->
+          <!-- ------------- -->
+        </template>
+        <v-card>
+          <v-toolbar dark color="primary">
+            <!-- <v-btn icon dark @click="dialog = false">
+              <v-icon>mdi-close</v-icon>
+            </v-btn> -->
+            <v-toolbar-title>[scoped] {{ file.name }}</v-toolbar-title>
+            <v-spacer></v-spacer>
+            <v-toolbar-items>
+              <v-btn dark text @click="isShowDialog = false">
+                Done
+              </v-btn>
+            </v-toolbar-items>
+          </v-toolbar>
+          <!-- ------------- -->
+          <!-- dialog viewer -->
+          <!-- ------------- -->
+          <div id="DialogView">
+            <div class="each-chart-grid">
+              <div class="id-container">{{ file.id }}</div>
+
+              <div
+                :id="'canvas-wrapper-' + file.name + '-scoped'"
+                class="graph-container"
+              ></div>
+              <div class="setting-container">
+                <!-- <h3>file: {{ file.name }}</h3> -->
+                <p>graph: {{ display.currentDisplayGraphName }}</p>
+                <div class="setting-router-container">
+                  <v-btn icon color="gray" @click="showNextGraph()">
+                    <v-icon>mdi-arrow-left-bold-circle</v-icon>
+                  </v-btn>
+                  <v-btn icon color="gray" @click="showNextGraph()">
+                    <v-icon>mdi-arrow-right-bold-circle</v-icon>
+                  </v-btn>
+                </div>
+              </div>
+              <div class="result-container">
+                result{{ file.name }}
+                <table-component></table-component>
+              </div>
+            </div>
+          </div>
+          <!-- ------------- -->
+          <!-- end dialog viewer -->
+          <!-- ------------- -->
+        </v-card>
+      </v-dialog>
+    </v-row>
   </div>
 </template>
 
@@ -31,6 +126,8 @@ export default {
       /**
        * //component data
        */
+      isShowDialog: false,
+      currentChart: null,
       fontSize: {
         title: 12,
         axis: 10,
@@ -53,6 +150,10 @@ export default {
         color: "RGBA(225,95,150, 1)",
         hoverSize: 5,
       },
+      display: {
+        currentDisplayGraphName: "VI-parameter",
+        displayGraphList: ["VI-parameter", "Log-plot"],
+      },
       /**
        * //methods data
        */
@@ -62,7 +163,7 @@ export default {
   methods: {
     initChart() {
       //   console.log("in afiles:", this.files);
-      console.log("in afiles:", this.file);
+      // console.log("in afiles:", this.file);
       //   this.files.forEach((file) => {
       //   let addChartObj = {
       //     chartName: file.name,
@@ -77,6 +178,34 @@ export default {
       this.createCanvasElement(addChartObj);
       this.createChartVI(addChartObj);
       //   });
+    },
+    initDialogGraph() {
+      // this.destroyGraph();
+      window.setTimeout(() => {
+        let addChartObj = {
+          chartName: this.file.name + "-scoped",
+          labelName: this.file.name + "-scoped",
+          setDataArry: this.file.scatterData,
+        };
+        this.createCanvasElement(addChartObj);
+        this.createChartVI(addChartObj);
+      }, 10);
+    },
+    //views
+    showNextGraph() {
+      let { currentDisplayGraphName, displayGraphList } = this.display;
+      let currentName_i = displayGraphList.indexOf(currentDisplayGraphName);
+      let nextName =
+        displayGraphList[(currentName_i + 1) % displayGraphList.length];
+      this.display.currentDisplayGraphName = nextName;
+    },
+    showScopeGraph() {
+      let cpFile = JSON.parse(JSON.stringify(this.file));
+      // this.$emit("show-scope-graph", cpFile);
+    },
+    destroyGraph() {
+      // this.$emit("destroy");
+      this.currentChart.destroy();
     },
     //APIs
     createChartVI({ chartName, labelName, setDataArry }) {
@@ -165,7 +294,7 @@ export default {
           responsive: true,
         },
       });
-
+      this.currentChart = chartData;
       this.$store.dispatch("main/setChartList", { chartName, chartData });
     },
 
@@ -179,7 +308,7 @@ export default {
             return dataset.label === labelName;
           }) !== undefined;
       }
-      console.log(isChartObj, isChartLabel);
+      // console.log(isChartObj, isChartLabel);
       if (isChartObj && isChartLabel) {
         setDataArry.forEach((setData) => {
           chartObj.data.datasets.forEach((dataset) => {
@@ -193,7 +322,7 @@ export default {
       let insertElm = window.document.getElementById(
         "canvas-wrapper-" + chartName
       );
-      console.log("insertElm", insertElm);
+      // console.log("insertElm", insertElm, chartName);
       //   let newElm = window.document.createElement("div");
       let newElm = window.document.createElement("canvas");
       newElm.className = "canvas-chart";
@@ -225,10 +354,28 @@ export default {
     display: grid;
     border: solid 1px black;
     grid-template:
+      // "id router setting" 10%
       "id graph  setting" 50%
       "id graph  result" 50%
       / 2% #{$__graph-height} 1fr;
 
+    // .router-container {
+    //   // grid-area: router;
+    //   // z-index: 2;
+    //   position: absolute;
+    //   .router-item {
+    //     z-index: 0;
+    //     position: absolute;
+    //     left: 10%;
+    //     // transform: translateX(-50%);
+    //   }
+
+    // border-left: solid 1px black;
+    // border-right: solid 1px black;
+    // border: solid 1px black;
+    //   height: 52vh;
+    //   width: calc(2% + #{$__graph-height});
+    // }
     .id-container {
       grid-area: id;
       justify-self: center;
@@ -244,6 +391,7 @@ export default {
       border: solid 1px black;
       height: 100%;
       width: 100%;
+      z-index: 5;
     }
     .result-container {
       grid-area: result;
@@ -258,6 +406,69 @@ export default {
       justify-self: flex-start;
       align-self: center;
       height: 100%;
+      width: 100%;
+
+      .setting-router-container {
+        width: 100%;
+      }
+    }
+  }
+}
+#DialogView {
+  display: block;
+  //   height: 100%;
+  height: 90vh;
+  width: 100%;
+  .each-chart-grid {
+    height: 100%;
+    display: grid;
+    border: solid 1px black;
+    grid-template:
+      // "id router setting" 10%
+      "id graph  setting" 50%
+      "id graph  result" 50%
+      / 2% 0.6fr 0.4fr;
+
+    .router-container {
+    }
+    .id-container {
+      grid-area: id;
+      justify-self: center;
+      align-self: center;
+      // border: solid 1px black;
+      // height: 100%;
+      // width: 100%;
+    }
+    .graph-container {
+      grid-area: graph;
+      justify-self: center;
+      align-self: center;
+      border: solid 1px black;
+      height: 100%;
+      width: 100%;
+      z-index: 5;
+    }
+    .result-container {
+      grid-area: result;
+      justify-self: center;
+      align-self: center;
+      //   font-size: 40px;
+      height: 100%;
+      width: 100%;
+      overflow: scroll;
+      border-left: solid 1px black;
+    }
+    .setting-container {
+      grid-area: setting;
+      justify-self: flex-start;
+      align-self: center;
+      height: 100%;
+      width: 100%;
+      border-left: solid 1px black;
+
+      .setting-router-container {
+        width: 100%;
+      }
     }
   }
 }
