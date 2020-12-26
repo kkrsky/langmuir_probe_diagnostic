@@ -41,10 +41,7 @@
           <!-- <chart-container :files="files"></chart-container> -->
 
           <div v-for="file in files" :key="file.id">
-            <chart-container
-              :file="file"
-              @show-scope-graph="showScopeGraph($event)"
-            ></chart-container>
+            <chart-container :file="file"></chart-container>
           </div>
         </div>
       </div>
@@ -52,15 +49,6 @@
       <!-- ---------- -->
       <!-- ScopedGraphViewer -->
       <!-- ---------- -->
-      <div id="ScopedGraphViewer" v-if="true">
-        <!-- <div id="ScopedGraphViewer" v-if="isShowScopedGraphViewer"> -->
-
-        <h3>拡大表示</h3>
-        <chart-container
-          :file="scopedFile"
-          @destroy="isShowScopedGraphViewer = !isShowScopedGraphViewer"
-        ></chart-container>
-      </div>
 
       <!-- ---------- -->
       <!-- TopSetting -->
@@ -188,7 +176,7 @@ export default {
       ////////////////////////////
       isShowDisplaySetting: true,
       isShowDisplayCalc: true,
-      isShowScopedGraphViewer: false,
+      // isShowScopedGraphViewer: false,
       areaOfProbe: 0.097075213,
       gasType: ["Ar", "H2", "Other"],
       gasTypeMassSelect: 6.63385357335952 * Math.pow(10, -26),
@@ -201,7 +189,6 @@ export default {
       ////////////////////////////
       //Top calc data
       ////////////////////////////
-      scopedFile: null,
     };
   },
   computed: {},
@@ -210,6 +197,25 @@ export default {
       console.log(this.files);
       let tes = this.$store.state.main.chartList;
       console.log(tes);
+      // let tes2 = [
+      //   // { x: 200, y: 100 },
+      //   // { x: 250, y: 150 },
+      //   [200, 100],
+      //   [250, 150],
+      // ];
+      // let tes3 = this.leastSquareMethod(tes2);
+      // console.log("ab", tes3);
+      let obj = {
+        a: 2,
+        // b: -1,
+        x: 1,
+        // y: 0,
+      };
+      let a = 2;
+      let b = -1;
+      let tes2 = this.calcLinerPoint({ a, b, y: 0 });
+      console.log(tes2);
+      // this.calcFloatingPotential();
     },
     ////////////////////////////
     //files
@@ -230,7 +236,7 @@ export default {
           let rawText = e.target.result;
           let formatTextArry = this.rawTextData2Obj(rawText);
           let scatterData = this.data2ScatterData(formatTextArry);
-
+          let floatVolt = this.calcFloatVolt(formatTextArry);
           // //create chart
           // let addChartObj = {
           //   chartName: chartName,
@@ -261,6 +267,7 @@ export default {
               formatText: formatTextArry,
               scatterData: scatterData,
               data: null,
+              floatVolt: floatVolt,
             };
 
             this.files.push(obj);
@@ -511,18 +518,79 @@ export default {
     //Top calc data
     ////////////////////////////
     //init
+    //utils
+    leastSquareMethod(coordinates) {
+      /**
+       * @param {Object} coordinates [{x:0,y:0},...] or [[0,0],...]
+       */
 
+      if (Array.isArray(coordinates[0])) {
+        coordinates = coordinates.map((arr) => {
+          let [cx, cy] = arr;
+          return { x: cx, y: cy };
+        });
+      }
+      const n = coordinates.length;
+      const sigX = coordinates.reduce((acc, c) => acc + c.x, 0);
+      const sigY = coordinates.reduce((acc, c) => acc + c.y, 0);
+      const sigXX = coordinates.reduce((acc, c) => acc + c.x * c.x, 0);
+      const sigXY = coordinates.reduce((acc, c) => acc + c.x * c.y, 0);
+      // a(傾き)を求める
+      const a = (n * sigXY - sigX * sigY) / (n * sigXX - Math.pow(sigX, 2));
+      // b(切片)を求める
+      const b = (sigXX * sigY - sigXY * sigX) / (n * sigXX - Math.pow(sigX, 2));
+      return { a, b };
+    },
+    calcLinerPoint({ a, b, x, y }) {
+      if (a === undefined || b === undefined) {
+        console.error("please input a and b", a, b);
+      } else {
+        if (x === undefined) {
+          return (y - b) / a;
+        } else if (y === undefined) {
+          return a * x + b;
+        }
+      }
+    },
     //action
-    showScopeGraph(scopedFile) {
-      console.log("graph", scopedFile);
+    calcFloatVolt(formatText) {
+      /**
+       * @param {Array} formatText [[0,0],...]
+       */
+      let maxLoop = formatText.length;
+      let checkVoltArry = [];
 
-      //設定変更
-      scopedFile.name = scopedFile.name + "-scoped";
-      scopedFile.attribute = "scoped";
+      for (let i = 0; i < maxLoop; i++) {
+        let [cx, cy] = formatText[i];
+        let isFirstData = true;
 
-      //更新
-      this.scopedFile = scopedFile;
-      this.isShowScopedGraphViewer = !this.isShowScopedGraphViewer;
+        if (cy > 0) {
+          if (isFirstData) {
+            //最初のデータ
+            checkVoltArry.push([cx, cy]);
+
+            //これ以降でy軸が負となるデータを検出
+            for (let j = i + 1; j < maxLoop; j++) {
+              if (j === maxLoop - 1) break;
+              let [nx, ny] = formatText[j];
+              let [nx2, ny2] = formatText[j + 1];
+
+              if (ny < 0) {
+                checkVoltArry.push([nx, ny]);
+                if (ny2 > 0) checkVoltArry.push([nx2, ny2]);
+              }
+            }
+            isFirstData = false;
+            break;
+          }
+        }
+        //初期データ用
+        checkVoltArry[0] = [cx, cy];
+      }
+      console.log("checkVoltArry", checkVoltArry);
+      let { a, b } = this.leastSquareMethod(checkVoltArry);
+      let meanFloatVolt = this.calcLinerPoint({ a, b, y: 0 });
+      return meanFloatVolt;
     },
   },
   watch: {},
