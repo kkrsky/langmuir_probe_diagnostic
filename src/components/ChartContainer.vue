@@ -215,6 +215,7 @@ export default {
       element.remove();
     },
     //APIs
+    //tes
     createChartVI({ chartName, labelName, setDataArry }) {
       //   console.log(chartName, labelName)
       let chartVI_ctx = window.document
