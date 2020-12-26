@@ -65,7 +65,7 @@
             <v-toolbar-title>[scoped] {{ file.name }}</v-toolbar-title>
             <v-spacer></v-spacer>
             <v-toolbar-items>
-              <v-btn dark text @click="isShowDialog = false">
+              <v-btn dark text @click="destroyGraph()">
                 Done
               </v-btn>
             </v-toolbar-items>
@@ -205,7 +205,13 @@ export default {
     },
     destroyGraph() {
       // this.$emit("destroy");
+      this.isShowDialog = false;
       this.currentChart.destroy();
+      console.log("canvas-" + this.file.name + "-scoped");
+      const element = document.getElementById(
+        "canvas-" + this.file.name + "-scoped"
+      );
+      element.remove();
     },
     //APIs
     createChartVI({ chartName, labelName, setDataArry }) {
@@ -322,13 +328,28 @@ export default {
       let insertElm = window.document.getElementById(
         "canvas-wrapper-" + chartName
       );
+      let isScoped = false;
+      // console.log(chartName.split("-scoped").length, chartName);
+      if (chartName.split("-scoped").length > 1) {
+        isScoped = true;
+      }
       // console.log("insertElm", insertElm, chartName);
       //   let newElm = window.document.createElement("div");
       let newElm = window.document.createElement("canvas");
       newElm.className = "canvas-chart";
       newElm.id = "canvas-" + chartName;
-      newElm.style.height = "50vh";
-      newElm.style.width = "50vh";
+      if (isScoped) {
+        //
+        newElm.style.height = "10%";
+        // newElm.style.height = "50vw";
+        newElm.style.width = "10%";
+        // newElm.style.width = "50vw";
+        // newElm.style.overflow = "hidden";
+      } else {
+        newElm.style.height = "50vh";
+        newElm.style.width = "50vh";
+      }
+
       insertElm.appendChild(newElm);
     },
   },
@@ -427,10 +448,8 @@ export default {
       // "id router setting" 10%
       "id graph  setting" 50%
       "id graph  result" 50%
-      / 2% 0.6fr 0.4fr;
+      / 2% 60% 38%;
 
-    .router-container {
-    }
     .id-container {
       grid-area: id;
       justify-self: center;
@@ -447,6 +466,13 @@ export default {
       height: 100%;
       width: 100%;
       z-index: 5;
+      .canvas-chart {
+        display: none !important;
+      }
+      canvas {
+        // background-color: red;
+        display: none !important;
+      }
     }
     .result-container {
       grid-area: result;
