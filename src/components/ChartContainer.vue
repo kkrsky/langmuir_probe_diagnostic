@@ -149,6 +149,7 @@ export default {
         size: 1,
         color: "RGBA(225,95,150, 1)",
         hoverSize: 5,
+        pointHitRadius: 2,
       },
       display: {
         currentDisplayGraphName: "VI-parameter",
@@ -229,6 +230,7 @@ export default {
               backgroundColor: this.point.color,
               pointRadius: this.point.size,
               pointHoverRadius: this.point.hoverSize,
+              pointHitRadius: this.point.pointHitRadius,
             },
             // {
             //   label: "label2",
@@ -296,6 +298,24 @@ export default {
               text: "tes",
             },
           ],
+          tooltips: {
+            mode: "nearest",
+            intersect: true,
+            caretPadding: 30,
+            caretSize: 10,
+            callbacks: {
+              title: (tooltipItem, chart) => {
+                // console.log(
+                //   "tooltipItem",
+                //   tooltipItem,
+                //   chart,
+                //   tooltipItem[0].index
+                // );
+
+                return tooltipItem[0].index + 1;
+              },
+            },
+          },
           maintainAspectRatio: true,
           responsive: true,
         },
