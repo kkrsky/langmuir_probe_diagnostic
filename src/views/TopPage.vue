@@ -547,7 +547,7 @@ export default {
   border-radius: 2%;
   // height: 100vh;
   .TopCalc-container {
-    height: 52vh;
+    height: 60vh;
     overflow: scroll;
   }
 }
