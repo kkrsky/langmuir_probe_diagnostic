@@ -26,7 +26,12 @@
               <v-row>
                 <v-col>
                   <p>graph: {{ display.currentDisplayGraphName }}</p>
-                  <p>{{ file.isatDataObj.diffData_leastLineObj.a_coord }}</p>
+                  <p>
+                    {{ file.isatDataObj.diffData_leastLineObj.error.message }}
+                  </p>
+                  <p>
+                    {{ file.isatDataObj.diffData_leastLineObj.a_coord }}
+                  </p>
 
                   <div class="setting-router-container">
                     <v-btn icon color="gray" @click="showNextGraph(-1)">

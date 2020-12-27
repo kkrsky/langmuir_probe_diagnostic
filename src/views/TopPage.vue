@@ -700,6 +700,10 @@ export default {
         to,
         a_coord: a,
         b_coord: b,
+        error: {
+          isSuccess: true,
+          message: "エラーはありません。",
+        },
       };
 
       return outputObj;
@@ -800,13 +804,18 @@ export default {
           }
 
           //check a_coord
-          console.log(obj.leastLineObj.a_coord, obj.a_coord_threshold);
+          // console.log(obj.leastLineObj.a_coord, obj.a_coord_threshold);
           if (obj.leastLineObj.a_coord < obj.a_coord_threshold) {
             obj.result = obj.leastLineObj;
+            obj.leastLineObj.error.message =
+              "自動でイオン飽和電流を求めました。";
             // console.log(obj.result, obj.leastLineObj);
             obj.endLoop = true;
           } else if (obj.cnt > obj.originArry.length / 2) {
             console.error("手動でイオン飽和電流を求めてください");
+            obj.leastLineObj.error.isSuccess = false;
+            obj.leastLineObj.error.message =
+              "手動でイオン飽和電流を求めてください";
             obj.result = obj.leastLineObj;
             obj.endLoop = true;
           } else {
@@ -835,7 +844,7 @@ export default {
         a_coord_threshold: Number(8 * 1e-5),
       };
       let leastLineObj_opt = findGoodIsatPoint_recur(lsmObj);
-      console.log("leastLineObj_opt", leastLineObj_opt);
+      // console.log("leastLineObj_opt", leastLineObj_opt);
       //出力オブジェクト形成
       let outputObj = {
         diffData_arry: diff_y_output,
