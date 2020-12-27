@@ -1,9 +1,15 @@
 let main = {
   namespaced: true,
-  state() {},
+  state: () => ({
+    chartList: {},
+  }),
   getters: {},
   mutations: {},
-  actions: {},
+  actions: {
+    setChartList({ state }, { chartName, chartData }) {
+      state.chartList[chartName] = chartData;
+    },
+  },
 };
 
 export default main;
