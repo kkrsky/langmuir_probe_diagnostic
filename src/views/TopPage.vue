@@ -41,7 +41,11 @@
           <!-- <chart-container :files="files"></chart-container> -->
 
           <div v-for="file in files" :key="file.id">
-            <chart-container :file="file"></chart-container>
+            <chart-container
+              :file="file"
+              @changeFrom="setChange('from', $event, file)"
+              @changeTo="setChange('to', $event, file)"
+            ></chart-container>
           </div>
         </div>
       </div>
@@ -189,11 +193,14 @@ export default {
       ////////////////////////////
       //Top calc data
       ////////////////////////////
+      test: {
+        // least: null,
+      },
     };
   },
   computed: {},
   methods: {
-    test() {
+    test2() {
       console.log(this.files);
       let tes = this.$store.state.main.chartList;
       console.log(tes);
@@ -216,6 +223,66 @@ export default {
       let tes2 = this.calcLinerPoint({ a, b, y: 0 });
       console.log(tes2);
       // this.calcFloatingPotential();
+      let formatTextArry = [
+        [-29.99875, -0.1926354],
+        [-28.17934, -0.1876809],
+        [-21.51288, -0.1747713],
+        [-0.2997811, -0.1130338999999],
+        [0.3113615, -0.1080423],
+        [2.727842, -0.02973658],
+        [3.338421, 0.02863798],
+      ];
+
+      // this.calcIonSatAct({ floatVolt: 1, formatTextArry });
+
+      let tes3 = this.calcDiff_y(formatTextArry);
+      console.log(tes3);
+    },
+    setChange(target, changeVal, file) {
+      switch (target) {
+        case "from": {
+          //getter
+          let leastLineObj_origin = file.isatDataObj.diffData_leastLineObj;
+          let dataArry = file.isatDataObj.diffData_arry;
+          let to = leastLineObj_origin.to;
+          let from = leastLineObj_origin.from;
+
+          //treat
+          from = changeVal;
+          let leastLineObj_new = this.createLeastSquareMethodLine({
+            originArry: dataArry,
+            from,
+            to,
+          });
+
+          //setter
+          file.isatDataObj.diffData_leastLineObj = leastLineObj_new;
+          // console.log("leastLineObj_origin after", leastLineObj_origin);
+          break;
+        }
+        case "to": {
+          //getter
+          let leastLineObj_origin = file.isatDataObj.diffData_leastLineObj;
+          let dataArry = file.isatDataObj.diffData_arry;
+          let to = leastLineObj_origin.to;
+          let from = leastLineObj_origin.from;
+
+          //treat
+          to = changeVal;
+          let leastLineObj_new = this.createLeastSquareMethodLine({
+            originArry: dataArry,
+            from,
+            to,
+          });
+
+          //setter
+          file.isatDataObj.diffData_leastLineObj = leastLineObj_new;
+          break;
+        }
+        default: {
+          console.error("pls set proper target name:", target);
+        }
+      }
     },
     ////////////////////////////
     //files
@@ -237,6 +304,11 @@ export default {
           let formatTextArry = this.rawTextData2Obj(rawText);
           let scatterData = this.data2ScatterData(formatTextArry);
           let floatVolt = this.calcFloatVolt(formatTextArry);
+          let isatDataObj = this.calcIonSatAct({
+            floatVolt,
+            formatTextArry,
+          });
+
           // //create chart
           // let addChartObj = {
           //   chartName: chartName,
@@ -266,8 +338,10 @@ export default {
               rawText: rawText,
               formatText: formatTextArry,
               scatterData: scatterData,
+
               data: null,
               floatVolt: floatVolt,
+              isatDataObj,
             };
 
             this.files.push(obj);
@@ -484,7 +558,7 @@ export default {
           break;
         }
         case this.titleList.test.name: {
-          this.test();
+          this.test2();
           break;
         }
       }
@@ -552,6 +626,83 @@ export default {
         }
       }
     },
+    calcDiff_y(arry2D) {
+      /**
+       * @param {Array} arry [[x,y],...]
+       */
+      let item = arry2D.map((dot, i) => {
+        if (i < arry2D.length - 1) {
+          let [cx, cy] = dot;
+          let [nx, ny] = arry2D[i + 1];
+
+          //単位xあたりのy増加量
+          let diff_y = (ny - cy) / (nx - cx);
+          return [i, diff_y];
+        }
+      });
+      item.pop();
+      return item;
+    },
+    calcDotAverage(arry2D, dn) {
+      let temp = [];
+      let output = [];
+      for (let i = 0; i < arry2D.length; i++) {
+        let [cx, cy] = arry2D[i];
+        if (i % dn === 0 && i !== 0) {
+          let ave =
+            temp.reduce((acc, val) => {
+              return (acc += val);
+            }) / dn;
+          output.push([i, ave]);
+          temp = [];
+        } else {
+          temp.push(cy);
+        }
+      }
+      return output;
+    },
+    createLeastSquareMethodLine({ originArry, from, to }) {
+      let from_i = 0;
+      let to_i = 0;
+      let originArry_edit = this._cp(originArry);
+      if (from !== undefined && to !== undefined) {
+        from_i = from - 1; //indexに変換
+        to_i = to - 1;
+        if (from_i < 0) window.alert("fromの値を自然数で入力してください。");
+        originArry_edit = originArry.slice(from_i, to);
+      } else {
+        from_i = 0;
+        to_i = originArry_edit.length - 1;
+      }
+
+      let { a, b } = this.leastSquareMethod(originArry_edit);
+      let output = [];
+      let current;
+      console.log("to", to, to_i, originArry.length - 1);
+      for (let i = 0; i < originArry.length; i++) {
+        let cx = originArry[i][0];
+        let cy = a * cx + b;
+
+        //from,toの2点を送信
+        if (i === from_i || i === to_i) {
+          output.push([cx, cy]);
+        }
+      }
+
+      // console.log(output.slice(0, 1), to);
+      from = from_i + 1;
+      to = to_i + 1;
+      let outputObj = {
+        lineData: output,
+        lineData_scatter: this.data2ScatterData(output),
+        from,
+        to,
+        a_coord: a,
+        b_coord: b,
+      };
+
+      return outputObj;
+    },
     //action
     calcFloatVolt(formatText) {
       /**
@@ -591,6 +742,92 @@ export default {
       let { a, b } = this.leastSquareMethod(checkVoltArry);
       let meanFloatVolt = this.calcLinerPoint({ a, b, y: 0 });
       return meanFloatVolt;
+    },
+    calcIonSatAct({ floatVolt, formatTextArry }) {
+      let calcRange = formatTextArry.filter((line) => {
+        return line[0] < floatVolt;
+      });
+
+      //y軸増加分を計算
+      let diff_y = this.calcDiff_y(calcRange);
+
+      //エラー部分を除去 (次の点と比較して今の点が10倍以上異なる場合は除去)
+      let diff_y_output = diff_y.filter((dot, i) => {
+        if (i < diff_y.length - 1) {
+          let [cx, cy] = dot;
+          let [nx, ny] = diff_y[i + 1];
+          let threshold = 10;
+
+          if (cy / ny > threshold) {
+            return false;
+          } else {
+            return true;
+          }
+        } else {
+          return false;
+        }
+      });
+
+      //average
+      let calcAveArry = diff_y_output.map((val) => {
+        return val[1];
+      });
+      let diffAverage =
+        calcAveArry.slice().reduce((acc, val) => {
+          return (acc += val);
+        }) / diff_y_output.length;
+      // console.log("diffAverage", diffAverage);
+
+      //エラー除去②、平均よりも10倍以上高い場合は除去
+      diff_y_output = diff_y_output.filter((dot, i) => {
+        let [cx, cy] = dot;
+        let threshold = 10;
+        if (cy / diffAverage > threshold) return false;
+        else return true;
+      });
+
+      // let diff_y_output_ave = this.calcDotAverage(diff_y_output, 2);
+      // // let diff_y_output3 = this.calcDiff_y(diff_y_output2);
+
+      // //エラー部分を除去 (前の点と比較して10倍以上異なる場合は除去)
+      // let diff_y_output2 = diff_y_output_ave.filter((dot, i) => {
+      //   if (i < diff_y_output_ave.length - 1) {
+      //     let [cx, cy] = dot;
+      //     let [nx, ny] = diff_y_output_ave[i + 1];
+      //     let threshold = 10;
+
+      //     if (cy / ny > threshold) {
+      //       return false;
+      //     } else {
+      //       return true;
+      //     }
+      //   } else {
+      //     return false;
+      //   }
+      // });
+
+      // let least = this.leastSquareMethod(diff_y_output_ave);
+      // console.log("least", least);
+      // this.test.least = least.a;
+
+      let outputObj = {
+        diffData_arry: diff_y_output,
+        diffData_scatter: this.data2ScatterData(diff_y_output),
+        diffData_leastLineObj: this.createLeastSquareMethodLine({
+          originArry: diff_y_output,
+        }),
+        isat: null,
+      };
+
+      // console.log("diffData_leastLineObj", outputObj.diffData_leastLineObj);
+      return outputObj;
+    },
+
+    ////////////////////////////
+    //helper
+    ////////////////////////////
+    _cp(val) {
+      return JSON.parse(JSON.stringify(val));
     },
   },
   watch: {},

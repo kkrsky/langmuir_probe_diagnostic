@@ -1,50 +1,141 @@
 <template>
   <!-- <div id="ChartContainer"> -->
   <div id="ChartContainer">
-    <v-row justify="center">
-      <v-dialog
-        v-model="isShowDialog"
-        fullscreen
-        hide-overlay
-        transition="dialog-bottom-transition"
-      >
-        <template v-slot:activator="{ on, attrs }">
-          <!-- ------------- -->
-          <!-- normal viewer -->
-          <!-- ------------- -->
-          <div class="each-chart-grid">
-            <div class="id-container">{{ file.id }}</div>
-            <div
+    <v-dialog
+      v-model="isShowDialog"
+      fullscreen
+      hide-overlay
+      transition="dialog-bottom-transition"
+    >
+      <template v-slot:activator="{ on, attrs }">
+        <!-- ------------- -->
+        <!-- normal viewer -->
+        <!-- ------------- -->
+        <div class="each-chart-grid">
+          <div class="id-container">{{ file.id }}</div>
+          <!-- <div
               :id="'canvas-wrapper-' + file.name"
               class="graph-container"
-            ></div>
+            ></div> -->
+          <create-chart
+            :createChart="createChartObj"
+            :key="createChartObj.reload"
+          ></create-chart>
+          <div class="setting-container">
+            <v-container class="setting-start-from-container">
+              <v-row>
+                <v-col>
+                  <p>graph: {{ display.currentDisplayGraphName }}</p>
+                  <p>{{ file.isatDataObj.diffData_leastLineObj.a_coord }}</p>
+
+                  <div class="setting-router-container">
+                    <v-btn icon color="gray" @click="showNextGraph(-1)">
+                      <v-icon>mdi-arrow-left-bold-circle</v-icon>
+                    </v-btn>
+                    <v-btn icon color="gray" @click="showNextGraph(1)">
+                      <v-icon>mdi-arrow-right-bold-circle</v-icon>
+                    </v-btn>
+                    <v-btn
+                      icon
+                      color="gray"
+                      @click="initDialogGraph()"
+                      v-if="file.attribute === 'normal'"
+                      v-bind="attrs"
+                      v-on="on"
+                    >
+                      <v-icon>mdi-arrow-top-right-bottom-left-bold</v-icon>
+                    </v-btn>
+                    <v-btn
+                      icon
+                      color="gray"
+                      @click="destroyGraph()"
+                      v-if="file.attribute === 'scoped'"
+                    >
+                      <v-icon>mdi-close-circle</v-icon>
+                    </v-btn>
+                  </div>
+                </v-col>
+                <v-col>
+                  <h3>file: {{ file.name }}</h3>
+                  <v-btn @click="testChartContainer()">test</v-btn>
+                </v-col>
+              </v-row>
+
+              <v-row>
+                <v-col cols="4">
+                  <v-checkbox v-model="isEditManual" label="manual">
+                  </v-checkbox>
+                </v-col>
+                <v-col>
+                  <v-textarea
+                    class="mx-2"
+                    label="from"
+                    rows="1"
+                    v-model="fromLine"
+                    prepend-icon="mdi-ray-start"
+                    :disabled="!isEditManual"
+                  ></v-textarea>
+                </v-col>
+                <v-col>
+                  <v-textarea
+                    class="mx-2"
+                    label="to"
+                    rows="1"
+                    v-model="toLine"
+                    prepend-icon="mdi-ray-end"
+                    :disabled="!isEditManual"
+                  ></v-textarea>
+                </v-col>
+              </v-row>
+            </v-container>
+          </div>
+          <div class="result-container">
+            <!-- result{{ file.name }} -->
+            <table-component></table-component>
+          </div>
+        </div>
+        <!-- ------------- -->
+        <!-- normal viewer -->
+        <!-- ------------- -->
+      </template>
+      <v-card>
+        <v-toolbar dark color="primary">
+          <!-- <v-btn icon dark @click="dialog = false">
+              <v-icon>mdi-close</v-icon>
+            </v-btn> -->
+          <v-toolbar-title>[scoped] {{ file.name }}</v-toolbar-title>
+          <v-spacer></v-spacer>
+          <v-toolbar-items>
+            <v-btn dark text @click="destroyGraph()">
+              Done
+            </v-btn>
+          </v-toolbar-items>
+        </v-toolbar>
+        <!-- ------------- -->
+        <!-- dialog viewer -->
+        <!-- ------------- -->
+        <div id="DialogView">
+          <div class="each-chart-grid">
+            <div class="id-container">{{ file.id }}</div>
+
+            <!-- <div
+                :id="'canvas-wrapper-' + file.name + '-scoped'"
+                class="graph-container"
+              ></div> -->
+            <create-chart
+              :createChart="createChartObj"
+              :key="createChartObj.reload"
+            ></create-chart>
+
             <div class="setting-container">
-              <h3>file: {{ file.name }}</h3>
+              <!-- <h3>file: {{ file.name }}</h3> -->
               <p>graph: {{ display.currentDisplayGraphName }}</p>
               <div class="setting-router-container">
-                <v-btn icon color="gray" @click="showNextGraph()">
+                <v-btn icon color="gray" @click="showNextGraph(-1)">
                   <v-icon>mdi-arrow-left-bold-circle</v-icon>
                 </v-btn>
-                <v-btn icon color="gray" @click="showNextGraph()">
+                <v-btn icon color="gray" @click="showNextGraph(1)">
                   <v-icon>mdi-arrow-right-bold-circle</v-icon>
-                </v-btn>
-                <v-btn
-                  icon
-                  color="gray"
-                  @click="initDialogGraph()"
-                  v-if="file.attribute === 'normal'"
-                  v-bind="attrs"
-                  v-on="on"
-                >
-                  <v-icon>mdi-arrow-top-right-bottom-left-bold</v-icon>
-                </v-btn>
-                <v-btn
-                  icon
-                  color="gray"
-                  @click="destroyGraph()"
-                  v-if="file.attribute === 'scoped'"
-                >
-                  <v-icon>mdi-close-circle</v-icon>
                 </v-btn>
               </div>
             </div>
@@ -53,64 +144,19 @@
               <table-component></table-component>
             </div>
           </div>
-          <!-- ------------- -->
-          <!-- normal viewer -->
-          <!-- ------------- -->
-        </template>
-        <v-card>
-          <v-toolbar dark color="primary">
-            <!-- <v-btn icon dark @click="dialog = false">
-              <v-icon>mdi-close</v-icon>
-            </v-btn> -->
-            <v-toolbar-title>[scoped] {{ file.name }}</v-toolbar-title>
-            <v-spacer></v-spacer>
-            <v-toolbar-items>
-              <v-btn dark text @click="destroyGraph()">
-                Done
-              </v-btn>
-            </v-toolbar-items>
-          </v-toolbar>
-          <!-- ------------- -->
-          <!-- dialog viewer -->
-          <!-- ------------- -->
-          <div id="DialogView">
-            <div class="each-chart-grid">
-              <div class="id-container">{{ file.id }}</div>
-
-              <div
-                :id="'canvas-wrapper-' + file.name + '-scoped'"
-                class="graph-container"
-              ></div>
-              <div class="setting-container">
-                <!-- <h3>file: {{ file.name }}</h3> -->
-                <p>graph: {{ display.currentDisplayGraphName }}</p>
-                <div class="setting-router-container">
-                  <v-btn icon color="gray" @click="showNextGraph()">
-                    <v-icon>mdi-arrow-left-bold-circle</v-icon>
-                  </v-btn>
-                  <v-btn icon color="gray" @click="showNextGraph()">
-                    <v-icon>mdi-arrow-right-bold-circle</v-icon>
-                  </v-btn>
-                </div>
-              </div>
-              <div class="result-container">
-                result{{ file.name }}
-                <table-component></table-component>
-              </div>
-            </div>
-          </div>
-          <!-- ------------- -->
-          <!-- end dialog viewer -->
-          <!-- ------------- -->
-        </v-card>
-      </v-dialog>
-    </v-row>
+        </div>
+        <!-- ------------- -->
+        <!-- end dialog viewer -->
+        <!-- ------------- -->
+      </v-card>
+    </v-dialog>
   </div>
 </template>
 
 <script>
 // import TopFooter from "@/components/TopFooter.vue";
 import TableComponent from "./TableComponent";
+import CreateChart from "./CreateChart";
 
 export default {
   props: {
@@ -126,8 +172,10 @@ export default {
       /**
        * //component data
        */
+
       isShowDialog: false,
       currentChart: null,
+      chartType: "scatter",
       fontSize: {
         title: 12,
         axis: 10,
@@ -135,11 +183,13 @@ export default {
       },
       axis: {
         y: {
+          labelName: "I [mA]",
           stepSize: 10,
           maxSize: null,
           minSize: null,
         },
         x: {
+          labelName: "V [V]",
           stepSize: 10,
           maxSize: null,
           minSize: null,
@@ -148,57 +198,194 @@ export default {
       point: {
         size: 1,
         color: "RGBA(225,95,150, 1)",
-        hoverSize: 5,
+        hoverSize: 3,
         pointHitRadius: 2,
       },
+
+      //uppper
       display: {
         currentDisplayGraphName: "VI-parameter",
-        displayGraphList: ["VI-parameter", "Log-plot"],
+        displayGraphList: ["VI-parameter", "Log-plot", "test"],
+      },
+      isEditManual: false,
+      emit: {
+        from: 0,
+        to: 0,
       },
       /**
        * //methods data
        */
+      createChartObj: {},
     };
   },
-  computed: {},
+  computed: {
+    fromLine: {
+      get() {
+        return this.$props.file.isatDataObj.diffData_leastLineObj.from;
+      },
+      set(fromVal) {
+        if (isNaN(Number(fromVal))) window.alert("数値を入力してください。");
+        else {
+          this.$emit("changeFrom", Number(fromVal));
+          this.updateChart("hard");
+        }
+      },
+    },
+    toLine: {
+      get() {
+        return this.$props.file.isatDataObj.diffData_leastLineObj.to;
+      },
+      set(toVal) {
+        if (isNaN(Number(toVal))) window.alert("数値を入力してください。");
+        else {
+          this.$emit("changeTo", Number(toVal));
+          this.updateChart("hard");
+        }
+      },
+    },
+  },
   methods: {
+    testChartContainer() {
+      console.log(this.file.isatDataObj);
+      // this.updateChart();
+      this.showNextGraph(0);
+    },
     initChart() {
-      //   console.log("in afiles:", this.files);
-      // console.log("in afiles:", this.file);
-      //   this.files.forEach((file) => {
-      //   let addChartObj = {
-      //     chartName: file.name,
-      //     labelName: file.name,
-      //     setDataArry: file.scatterData,
-      //   };
-      let addChartObj = {
-        chartName: this.file.name,
-        labelName: this.file.name,
-        setDataArry: this.file.scatterData,
+      let fontSize = this.fontSize;
+      let axis = this.axis;
+      let point = this.point;
+      let chartType = this.chartType;
+      let file = this.file;
+      let chartName = this.file.name;
+      let labelName = this.file.name;
+      let setDataArry = this.file.scatterData;
+      let createChartObj = {
+        data: { file, chartName, labelName, setDataArry },
+        setting: {
+          fontSize,
+          axis,
+          point,
+          chartType,
+        },
+        reload: 0, //再描画用,再描画する際にインクリメントする
       };
-      this.createCanvasElement(addChartObj);
-      this.createChartVI(addChartObj);
+      // let addChartObj = {
+      //   chartName: this.file.name,
+      //   labelName: this.file.name,
+      //   setDataArry: this.file.scatterData,
+      // };
+      // this.createCanvasElement(addChartObj);
+      // this.createChartVI(addChartObj);
       //   });
+      this.createChartObj = createChartObj;
+      this.updateChart();
     },
     initDialogGraph() {
       // this.destroyGraph();
-      window.setTimeout(() => {
-        let addChartObj = {
-          chartName: this.file.name + "-scoped",
-          labelName: this.file.name + "-scoped",
-          setDataArry: this.file.scatterData,
-        };
-        this.createCanvasElement(addChartObj);
-        this.createChartVI(addChartObj);
-      }, 10);
+
+      //setting
+      let fontSize = this.fontSize;
+      let axis = this.axis;
+      let point = this.point;
+      let chartType = this.chartType;
+
+      //data
+      let file = this.file;
+      let chartName = this.file.name + "-scoped";
+      let labelName = this.file.name + "-scoped";
+      let setDataArry = this.file.scatterData;
+      let createChartObj = {
+        data: { file, chartName, labelName, setDataArry },
+        setting: {
+          fontSize,
+          axis,
+          point,
+          chartType,
+        },
+        reload: 0,
+      };
+      this.createChartObj = createChartObj;
+      this.updateChart();
+      // window.setTimeout(() => {
+      //   let addChartObj = {
+      //     chartName: this.file.name + "-scoped",
+      //     labelName: this.file.name + "-scoped",
+      //     setDataArry: this.file.scatterData,
+      //   };
+      //   this.createCanvasElement(addChartObj);
+      //   this.createChartVI(addChartObj);
+
+      // }, 10);
     },
+    initTestGraph() {
+      //setting
+      let fontSize = this.fontSize;
+      let axis = this.axis;
+      let point = this.point;
+      let chartType = this.chartType;
+
+      //data
+      // let file = this.file;
+      // let chartName = "test-graph-" + this.file.name;
+      // let labelName = "test-graph-" + this.file.name;
+      // let setDataArry = this.file.isatDataObj.diffData_scatter;
+      // let addLineObj = this.file.isatDataObj.diffData_leastLineObj;
+      //create
+      let createChartObj = {
+        data: {
+          file: this.file,
+          chartName: "test-graph-" + this.file.name,
+          labelName: "test-graph-" + this.file.name,
+          setDataArry: this.file.isatDataObj.diffData_scatter,
+          addLineObj: this.file.isatDataObj.diffData_leastLineObj,
+        },
+        setting: {
+          fontSize,
+          axis,
+          point,
+          chartType,
+        },
+        reload: 0,
+      };
+      this.createChartObj = createChartObj;
+      this.updateChart();
+
+      //init
+      // this.emit.from = this.file.isatDataObj.diffData_leastLineObj.from;
+      // this.emit.to = this.file.isatDataObj.diffData_leastLineObj.to;
+      // console.log("init", this.emit.from, this.emit.to, addLineObj);
+    },
+    updateChart(type) {
+      //データを更新した後、グラフを再描画する。
+      // console.log("update", this.createChartObj);
+      // this.destroyGraph()
+      if (type === "hard") {
+        //強制アップデート(全て再描画する)
+        this.showNextGraph(0);
+      } else {
+        //簡易アップデート(propで受け取った値をコピーしたものは更新されない)
+        window.setTimeout(() => {
+          this.createChartObj.reload++;
+        }, 1);
+      }
+    },
+
     //views
-    showNextGraph() {
+    showNextGraph(num) {
       let { currentDisplayGraphName, displayGraphList } = this.display;
       let currentName_i = displayGraphList.indexOf(currentDisplayGraphName);
+      if (currentName_i + num < 0) currentName_i = displayGraphList.length;
       let nextName =
-        displayGraphList[(currentName_i + 1) % displayGraphList.length];
+        displayGraphList[(currentName_i + num) % displayGraphList.length];
       this.display.currentDisplayGraphName = nextName;
+
+      if (nextName === "VI-parameter") {
+        // this.destroyGraph();
+        this.initChart();
+      } else if (nextName === "test") {
+        // this.destroyGraph();
+        this.initTestGraph();
+      }
     },
     showScopeGraph() {
       let cpFile = JSON.parse(JSON.stringify(this.file));
@@ -214,6 +401,11 @@ export default {
       );
       element.remove();
     },
+
+    //button actions
+    onChangeFromToVal(val) {
+      console.log(val);
+    },
     //APIs
     //tes2334567
     createChartVI({ chartName, labelName, setDataArry }) {
@@ -222,7 +414,7 @@ export default {
         .getElementById("canvas-" + chartName)
         .getContext("2d");
       let chartData = new Chart(chartVI_ctx, {
-        type: "scatter",
+        type: this.chartType,
         data: {
           datasets: [
             {
@@ -259,7 +451,7 @@ export default {
               {
                 scaleLabel: {
                   display: true,
-                  labelString: "V [V]",
+                  labelString: this.axis.x.labelName,
                   fontSize: this.fontSize.title,
                 },
                 ticks: {
@@ -277,7 +469,7 @@ export default {
               {
                 scaleLabel: {
                   display: true,
-                  labelString: "I [mA]",
+                  labelString: this.axis.y.labelName,
                   fontSize: this.fontSize.title,
                 },
                 ticks: {
@@ -375,12 +567,15 @@ export default {
     },
   },
   watch: {},
-  beforeCreate() {},
-  mounted() {
+  created() {
     this.initChart();
+  },
+  mounted() {
+    // this.initChart();
   },
   components: {
     TableComponent,
+    CreateChart,
   },
 };
 </script>
@@ -391,6 +586,11 @@ export default {
   //   height: 100%;
   height: 52vh;
   width: 100%;
+  .col {
+    margin: 0;
+    padding: 0 !important;
+    overflow: scroll;
+  }
   .each-chart-grid {
     height: 100%;
     display: grid;
