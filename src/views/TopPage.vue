@@ -202,8 +202,8 @@ export default {
   methods: {
     test2() {
       console.log(this.files);
-      let tes = this.$store.state.main.chartList;
-      console.log(tes);
+      // let tes = this.$store.state.main.chartList;
+      // console.log(tes);
       // let tes2 = [
       //   // { x: 200, y: 100 },
       //   // { x: 250, y: 150 },
@@ -212,31 +212,32 @@ export default {
       // ];
       // let tes3 = this.leastSquareMethod(tes2);
       // console.log("ab", tes3);
-      let obj = {
-        a: 2,
-        // b: -1,
-        x: 1,
-        // y: 0,
-      };
-      let a = 2;
-      let b = -1;
-      let tes2 = this.calcLinerPoint({ a, b, y: 0 });
-      console.log(tes2);
-      // this.calcFloatingPotential();
-      let formatTextArry = [
-        [-29.99875, -0.1926354],
-        [-28.17934, -0.1876809],
-        [-21.51288, -0.1747713],
-        [-0.2997811, -0.1130338999999],
-        [0.3113615, -0.1080423],
-        [2.727842, -0.02973658],
-        [3.338421, 0.02863798],
-      ];
+
+      // let obj = {
+      //   a: 2,
+      //   // b: -1,
+      //   x: 1,
+      //   // y: 0,
+      // };
+      // let a = 2;
+      // let b = -1;
+      // let tes2 = this.calcLinerPoint({ a, b, y: 0 });
+      // console.log(tes2);
+      // // this.calcFloatingPotential();
+      // let formatTextArry = [
+      //   [-29.99875, -0.1926354],
+      //   [-28.17934, -0.1876809],
+      //   [-21.51288, -0.1747713],
+      //   [-0.2997811, -0.1130338999999],
+      //   [0.3113615, -0.1080423],
+      //   [2.727842, -0.02973658],
+      //   [3.338421, 0.02863798],
+      // ];
 
       // this.calcIonSatAct({ floatVolt: 1, formatTextArry });
 
-      let tes3 = this.calcDiff_y(formatTextArry);
-      console.log(tes3);
+      // let tes3 = this.calcDiff_y(formatTextArry);
+      // console.log(tes3);
     },
     setChange(target, changeVal, file) {
       switch (target) {
@@ -786,36 +787,60 @@ export default {
         else return true;
       });
 
-      // let diff_y_output_ave = this.calcDotAverage(diff_y_output, 2);
-      // // let diff_y_output3 = this.calcDiff_y(diff_y_output2);
+      //平均二乗法によって傾き調整 (微分値なので単調増加の場合、傾きが０に近づけば良い、傾きが閾値以下になるまで計算)
+      let findGoodIsatPoint_recur = (obj) => {
+        if (obj.endLoop) {
+          return obj.result;
+        } else {
+          //init leastLineObj
+          if (obj.leastLineObj === null) {
+            obj.leastLineObj = this.createLeastSquareMethodLine({
+              originArry: obj.originArry,
+            });
+          }
 
-      // //エラー部分を除去 (前の点と比較して10倍以上異なる場合は除去)
-      // let diff_y_output2 = diff_y_output_ave.filter((dot, i) => {
-      //   if (i < diff_y_output_ave.length - 1) {
-      //     let [cx, cy] = dot;
-      //     let [nx, ny] = diff_y_output_ave[i + 1];
-      //     let threshold = 10;
+          //check a_coord
+          console.log(obj.leastLineObj.a_coord, obj.a_coord_threshold);
+          if (obj.leastLineObj.a_coord < obj.a_coord_threshold) {
+            obj.result = obj.leastLineObj;
+            // console.log(obj.result, obj.leastLineObj);
+            obj.endLoop = true;
+          } else if (obj.cnt > obj.originArry.length / 2) {
+            console.error("手動でイオン飽和電流を求めてください");
+            obj.result = obj.leastLineObj;
+            obj.endLoop = true;
+          } else {
+            //toから1を引いて、再度最小二乗法を計算
+            let { from, to } = obj.leastLineObj;
+            to -= 1;
+            obj.leastLineObj = this.createLeastSquareMethodLine({
+              originArry: obj.originArry,
+              from,
+              to,
+            });
+            obj.endLoop = false;
+          }
+          // console.log("obj.endLoop", obj.endLoop);
+          obj.cnt++;
+          return findGoodIsatPoint_recur(obj);
+        }
+      };
 
-      //     if (cy / ny > threshold) {
-      //       return false;
-      //     } else {
-      //       return true;
-      //     }
-      //   } else {
-      //     return false;
-      //   }
-      // });
-
-      // let least = this.leastSquareMethod(diff_y_output_ave);
-      // console.log("least", least);
-      // this.test.least = least.a;
-
+      let lsmObj = {
+        endLoop: false,
+        result: null,
+        leastLineObj: null,
+        cnt: 0,
+        originArry: diff_y_output,
+        a_coord_threshold: Number(8 * 1e-5),
+      };
+      let leastLineObj_opt = findGoodIsatPoint_recur(lsmObj);
+      console.log("leastLineObj_opt", leastLineObj_opt);
+      //出力オブジェクト形成
       let outputObj = {
         diffData_arry: diff_y_output,
         diffData_scatter: this.data2ScatterData(diff_y_output),
-        diffData_leastLineObj: this.createLeastSquareMethodLine({
-          originArry: diff_y_output,
-        }),
+        diffData_leastLineObj: leastLineObj_opt,
         isat: null,
       };
 
