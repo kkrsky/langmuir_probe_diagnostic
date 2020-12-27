@@ -678,7 +678,7 @@ export default {
       let { a, b } = this.leastSquareMethod(originArry_edit);
       let output = [];
       let current;
-      console.log("to", to, to_i, originArry.length - 1);
+      // console.log("to", to, to_i, originArry.length - 1);
       for (let i = 0; i < originArry.length; i++) {
         let cx = originArry[i][0];
         let cy = a * cx + b;
@@ -758,7 +758,7 @@ export default {
           let [nx, ny] = diff_y[i + 1];
           let threshold = 10;
 
-          if (cy / ny > threshold) {
+          if (Math.abs(cy / ny) > threshold) {
             return false;
           } else {
             return true;
@@ -768,7 +768,7 @@ export default {
         }
       });
 
-      //average
+      //極端なエラー値を除いたデータの平均算出
       let calcAveArry = diff_y_output.map((val) => {
         return val[1];
       });
@@ -782,7 +782,7 @@ export default {
       diff_y_output = diff_y_output.filter((dot, i) => {
         let [cx, cy] = dot;
         let threshold = 10;
-        if (cy / diffAverage > threshold) return false;
+        if (Math.abs(cy / diffAverage) > threshold) return false;
         else return true;
       });
 
