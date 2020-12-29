@@ -96,7 +96,8 @@
           </div>
           <div class="result-container">
             <!-- result{{ file.name }} -->
-            <table-component></table-component>
+            <!-- <table-component></table-component> -->
+            <result-table :result="resultObj"></result-table>
           </div>
         </div>
         <!-- ------------- -->
@@ -161,6 +162,7 @@
 <script>
 // import TopFooter from "@/components/TopFooter.vue";
 import TableComponent from "./TableComponent";
+import ResultTable from "./ResultTable";
 import CreateChart from "./CreateChart";
 
 export default {
@@ -216,6 +218,15 @@ export default {
       emit: {
         from: 0,
         to: 0,
+      },
+      resultObj: {
+        Iis_fit: 1,
+        Ies_calc: 0.03343,
+        Te: 20,
+        Ne_Iis: 0.03343,
+        Ne_Ies: 0.03343,
+        Vf: 0.03343,
+        Vs_calc: 0.03343,
       },
       /**
        * //methods data
@@ -581,6 +592,7 @@ export default {
   components: {
     TableComponent,
     CreateChart,
+    ResultTable,
   },
 };
 </script>

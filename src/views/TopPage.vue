@@ -29,7 +29,7 @@
     <top-header :title="title" :left="leftBtn" :right="rightBtn"></top-header>
     <v-main>
       <p>main</p>
-      <table-component></table-component>
+      <!-- <table-component></table-component> -->
       <!-- ---------- -->
       <!-- TopCalc -->
       <!-- ---------- -->
