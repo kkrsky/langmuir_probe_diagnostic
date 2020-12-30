@@ -239,45 +239,67 @@ export default {
       // let tes3 = this.calcDiff_y(formatTextArry);
       // console.log(tes3);
     },
-    setChange(target, changeVal, file) {
+    setChange(target, changeObj, file) {
+      let displayLeastGraphChanger_tofrom = (typeVal) => {
+        //parser
+        // console.log("changeObj", changeObj);
+        let {
+          changeValue,
+          displayGraphList,
+          currentDisplayGraphName,
+        } = changeObj;
+        let leastLineObj_origin = null;
+        let dataArry = null;
+        switch (currentDisplayGraphName) {
+          case displayGraphList[0]: {
+            //"V-Ip",
+            break;
+          }
+          case displayGraphList[1]: {
+            // "V-Log(Ie)",
+            break;
+          }
+          case displayGraphList[2]: {
+            //"n-dIis/dVp",
+            break;
+          }
+          case displayGraphList[3]: {
+            //"V-Iis",
+            leastLineObj_origin = file.isatDataObj.isatData_leastLineObj;
+            dataArry = file.isatDataObj.isatData_arry;
+            break;
+          }
+          case displayGraphList[4]: {
+            //"test"
+            leastLineObj_origin = file.isatDataObj.diffData_leastLineObj;
+            dataArry = file.isatDataObj.diffData_arry;
+            break;
+          }
+        }
+        //getter
+        let to = leastLineObj_origin.to;
+        let from = leastLineObj_origin.from;
+
+        //treat
+        if (typeVal === "from") from = changeValue;
+        if (typeVal === "to") to = changeValue;
+        let leastLineObj_new = this.createLeastSquareMethodLine({
+          originArry: dataArry,
+          from,
+          to,
+        });
+
+        //setter
+        file.isatDataObj.diffData_leastLineObj = leastLineObj_new;
+        // console.log("leastLineObj_origin after", leastLineObj_origin);
+      };
       switch (target) {
         case "from": {
-          //getter
-          let leastLineObj_origin = file.isatDataObj.diffData_leastLineObj;
-          let dataArry = file.isatDataObj.diffData_arry;
-          let to = leastLineObj_origin.to;
-          let from = leastLineObj_origin.from;
-
-          //treat
-          from = changeVal;
-          let leastLineObj_new = this.createLeastSquareMethodLine({
-            originArry: dataArry,
-            from,
-            to,
-          });
-
-          //setter
-          file.isatDataObj.diffData_leastLineObj = leastLineObj_new;
-          // console.log("leastLineObj_origin after", leastLineObj_origin);
+          displayLeastGraphChanger_tofrom("from");
           break;
         }
         case "to": {
-          //getter
-          let leastLineObj_origin = file.isatDataObj.diffData_leastLineObj;
-          let dataArry = file.isatDataObj.diffData_arry;
-          let to = leastLineObj_origin.to;
-          let from = leastLineObj_origin.from;
-
-          //treat
-          to = changeVal;
-          let leastLineObj_new = this.createLeastSquareMethodLine({
-            originArry: dataArry,
-            from,
-            to,
-          });
-
-          //setter
-          file.isatDataObj.diffData_leastLineObj = leastLineObj_new;
+          displayLeastGraphChanger_tofrom("to");
           break;
         }
         default: {
@@ -843,13 +865,24 @@ export default {
         originArry: diff_y_output,
         a_coord_threshold: Number(8 * 1e-5),
       };
-      let leastLineObj_opt = findGoodIsatPoint_recur(lsmObj);
-      // console.log("leastLineObj_opt", leastLineObj_opt);
+      let leastLineObj_diff = findGoodIsatPoint_recur(lsmObj);
+      // console.log("leastLineObj_diff", leastLineObj_diff);
+
+      //表示用イオン飽和電流算出
+      let leastLineObj_isat = this.createLeastSquareMethodLine({
+        originArry: calcRange,
+        from: leastLineObj_diff.from,
+        to: leastLineObj_diff.to,
+      });
+
       //出力オブジェクト形成
       let outputObj = {
         diffData_arry: diff_y_output,
         diffData_scatter: this.data2ScatterData(diff_y_output),
-        diffData_leastLineObj: leastLineObj_opt,
+        diffData_leastLineObj: leastLineObj_diff,
+        isatData_arry: calcRange,
+        isatData_scatter: this.data2ScatterData(calcRange),
+        isatData_leastLineObj: leastLineObj_isat,
         isat: null,
       };
 

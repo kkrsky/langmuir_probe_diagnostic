@@ -211,14 +211,10 @@ export default {
 
       //uppper
       display: {
-        currentDisplayGraphName: "VI-parameter",
-        displayGraphList: ["VI-parameter", "Log-plot", "test"],
+        currentDisplayGraphName: "V-Ip",
+        displayGraphList: ["V-Ip", "V-Log(Ie)", "n-dIis/dVp", "V-Iis", "test"],
       },
       isEditManual: false,
-      emit: {
-        from: 0,
-        to: 0,
-      },
       resultObj: {
         Iis_fit: 1,
         Ies_calc: 0.03343,
@@ -237,26 +233,107 @@ export default {
   computed: {
     fromLine: {
       get() {
-        return this.$props.file.isatDataObj.diffData_leastLineObj.from;
+        switch (this.display.currentDisplayGraphName) {
+          case this.display.displayGraphList[0]: {
+            //"V-Ip",
+            break;
+          }
+          case this.display.displayGraphList[1]: {
+            // "V-Log(Ie)",
+            break;
+          }
+          case this.display.displayGraphList[2]: {
+            //"n-dIis/dVp",
+            break;
+          }
+          case this.display.displayGraphList[3]: {
+            //"V-Iis",
+            return this.$props.file.isatDataObj.isatData_leastLineObj.from;
+            break;
+          }
+          case this.display.displayGraphList[4]: {
+            //"test"
+            return this.$props.file.isatDataObj.diffData_leastLineObj.from;
+            break;
+          }
+        }
       },
       set(fromVal) {
-        if (isNaN(Number(fromVal))) window.alert("数値を入力してください。");
-        else {
-          this.$emit("changeFrom", Number(fromVal));
-          this.updateChart("hard");
+        let fromOld = this.$props.file.isatDataObj.diffData_leastLineObj.from;
+        let toOld = this.$props.file.isatDataObj.diffData_leastLineObj.to;
+        if (isNaN(Number(fromVal))) {
+          window.alert("数値を入力してください。");
+          fromVal = fromOld;
+        } else {
+          fromVal = Number(fromVal);
         }
+        if (fromVal > toOld) {
+          window.alert("fromはtoよりも小さい値を入力して下さい。");
+          fromVal = fromOld;
+        }
+        let setObj = {
+          changeValue: fromVal,
+          displayGraphList: this.display.displayGraphList,
+          currentDisplayGraphName: this.display.currentDisplayGraphName,
+        };
+        this.$emit("changeFrom", setObj);
+        this.updateChart("hard");
       },
     },
     toLine: {
       get() {
-        return this.$props.file.isatDataObj.diffData_leastLineObj.to;
+        switch (this.display.currentDisplayGraphName) {
+          case this.display.displayGraphList[0]: {
+            //"V-Ip",
+            break;
+          }
+          case this.display.displayGraphList[1]: {
+            // "V-Log(Ie)",
+            break;
+          }
+          case this.display.displayGraphList[2]: {
+            //"n-dIis/dVp",
+            break;
+          }
+          case this.display.displayGraphList[3]: {
+            //"V-Iis",
+            return this.$props.file.isatDataObj.isatData_leastLineObj.to;
+            break;
+          }
+          case this.display.displayGraphList[4]: {
+            //"test"
+            return this.$props.file.isatDataObj.diffData_leastLineObj.to;
+            break;
+          }
+        }
       },
       set(toVal) {
-        if (isNaN(Number(toVal))) window.alert("数値を入力してください。");
-        else {
-          this.$emit("changeTo", Number(toVal));
-          this.updateChart("hard");
+        let fromOld = this.$props.file.isatDataObj.diffData_leastLineObj.from;
+        let toOld = this.$props.file.isatDataObj.diffData_leastLineObj.to;
+        let dataLength = this.$props.file.isatDataObj.diffData_arry.length;
+
+        if (isNaN(Number(toVal))) {
+          window.alert("数値を入力してください。");
+          toVal = toOld;
+        } else {
+          toVal = Number(toVal);
         }
+        if (fromOld > toVal) {
+          window.alert("toはfromよりも小さい値を入力して下さい。");
+          toVal = toOld;
+        } else if (toVal > dataLength) {
+          window.alert(
+            "最大データ数(" + dataLength + ") 以下の値を入力して下さい。"
+          );
+          toVal = toOld;
+        }
+        let setObj = {
+          changeValue: toVal,
+          displayGraphList: this.display.displayGraphList,
+          currentDisplayGraphName: this.display.currentDisplayGraphName,
+        };
+        this.$emit("changeTo", setObj);
+        this.updateChart("hard");
       },
     },
   },
