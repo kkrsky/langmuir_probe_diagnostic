@@ -874,6 +874,20 @@ export default {
           return false;
         else return true;
       });
+      //エラー除去②、平均よりも10倍以上高い場合は平均値に置換(微分とV-Iisグラフの番号が異なる問題を解決)
+      // diff_y_output = diff_y.slice().map((dot) => {
+      //   let [ci, cy] = dot;
+      //   let threshold = 10;
+      //   if (
+      //     Math.abs(cy / diffAverage) > threshold ||
+      //     Math.abs(cy / diffAverage) < 1 / threshold
+      //   ) {
+      //     return [-1, null];
+      //   } else {
+      //     return dot;
+      //   }
+      // });
+      // console.log(diff_y_output, diff_y_output.length, calcRange.length);
 
       //平均二乗法によって傾き調整 (微分値なので単調増加の場合、傾きが０に近づけば良い、傾きが閾値以下になるまで計算)
       let findGoodIsatPoint_recur = (obj) => {
@@ -892,26 +906,33 @@ export default {
           //開始位置の微調整
           if (obj.startAverage === null) {
             //開始付近の平均算出
-            let threshold = 0.05; //データ総点数の10%を始点付近とする
-            let maxStartIndex = Math.floor(obj.originArry.length * threshold);
+            let threshold = 0.05; //データ総点数の5%を始点付近とする
+            // let maxStartIndex = Math.floor(obj.originArry.length * threshold);
+            let maxStartIndex = 5;
             let startDataList = obj.originArry.slice(0, maxStartIndex);
             let sum = startDataList.slice().reduce((acc, val) => {
               acc[1] += val[1];
               return acc;
             })[1];
             let startAverage = sum / maxStartIndex;
-            // console.log(startAverage);
+            // console.log("startAverage", startAverage);
+            // console.log("maxStartIndex", maxStartIndex);
+            // console.log("sum", sum);
+            // console.log("startDataList", startDataList);
             //スタートポイント算出
             let minVal = 1;
             let minArry = [];
             startDataList.forEach((val) => {
               let diff = Math.abs(val[1] - startAverage);
-              if (minVal > diff) {
+              if (val[0] === -1) {
+                //none
+              } else if (minVal > diff) {
                 minVal = diff;
                 minArry = val;
               }
             });
             //setter
+            // console.log("min", minArry, "minVal", minVal);
             obj.startAverage = startAverage;
             obj.leastLineObj.from = minArry[0] + 1; //minArry[0]はindex
           }
@@ -954,6 +975,7 @@ export default {
         leastLineObj: null,
         startAverage: null,
         cnt: 0,
+        // originArry: diff_y,
         originArry: diff_y_output,
         a_coord_threshold: Number(6 * 1e-5),
       };
