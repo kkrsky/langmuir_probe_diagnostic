@@ -427,11 +427,18 @@ export default {
   methods: {
     testChartContainer() {
       // console.log(this.file.isatDataObj);
-      console.log(this.display);
-      console.log("chartList", this.$store.state.main.chartList);
-      this.updateChart();
+      // console.log(this.display);
+      // console.log("chartList", this.$store.state.main.chartList);
+      // this.updateChart();
       // this.updateChart();
       // this.showNextGraph(0);
+      // this.helper.snackFire({ message: "hello" });
+      // console.log(this.helper);
+      // console.log(this.$store.state.snackbarState);
+      // this.helper.db.store("test", { tes: "testObj" });
+      let res = this.helper.db.getKeyList();
+      console.log(this.helper.db);
+      console.log(res);
     },
     initDialogGraph({ graphType }) {
       // this.destroyGraph();
