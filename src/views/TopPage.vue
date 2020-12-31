@@ -374,6 +374,7 @@ export default {
           let scatterData = this.data2ScatterData(formatTextArry);
           let floatVolt = this.calcFloatVolt(formatTextArry);
           let isatDataObj = this.calcIonSatAct({
+            chartName: name,
             floatVolt,
             formatTextArry,
           });
@@ -399,7 +400,7 @@ export default {
               });
               id = maxIdObj.id + 1;
             }
-            let obj = {
+            let file = {
               id: id,
               attribute: attribute,
               name: name,
@@ -411,7 +412,11 @@ export default {
               isatDataObj,
             };
 
-            this.files.push(obj);
+            this.$store.dispatch("main/initChartList", {
+              chartName: name,
+              file,
+            });
+            this.files.push(file);
           } else {
             window.alert(
               "正しいデータフォーマットのファイルを入力してください。:" +
@@ -759,15 +764,12 @@ export default {
       // console.log(output.slice(0, 1), to);
       from = from_i + 1;
       to = to_i + 1;
-      const from_auto = from;
-      const to_auto = to;
+
       let outputObj = {
         lineData: output,
         lineData_scatter: this.data2ScatterData(output),
         from,
         to,
-        from_auto,
-        to_auto,
         a_coord: a,
         b_coord: b,
         error: {
@@ -818,7 +820,7 @@ export default {
       let meanFloatVolt = this.calcLinerPoint({ a, b, y: 0 });
       return meanFloatVolt;
     },
-    calcIonSatAct({ floatVolt, formatTextArry }) {
+    calcIonSatAct({ chartName, floatVolt, formatTextArry }) {
       let calcRange = formatTextArry.filter((line) => {
         return line[0] < floatVolt;
       });
@@ -923,16 +925,25 @@ export default {
         to: leastLineObj_diff.to,
       });
 
+      //データ保存
+
+      let diffData_fromto_auto = {
+        from: leastLineObj_diff.from,
+        to: leastLineObj_diff.to,
+      };
+
       //出力オブジェクト形成
       let isatDataObj = {
         //diff data
         diffData_arry: diff_y_output,
         diffData_scatter: this.data2ScatterData(diff_y_output),
         diffData_leastLineObj: leastLineObj_diff,
+        diffData_fromto_auto: diffData_fromto_auto,
         //isat data
         isatData_arry: calcRange,
         isatData_scatter: this.data2ScatterData(calcRange),
         isatData_leastLineObj: leastLineObj_isat,
+        isatData_fromto_auto: diffData_fromto_auto,
         isat: null,
       };
 

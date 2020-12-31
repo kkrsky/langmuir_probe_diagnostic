@@ -429,7 +429,7 @@ export default {
       // console.log(this.file.isatDataObj);
       // console.log(this.display);
       // console.log("chartList", this.$store.state.main.chartList);
-      // this.updateChart();
+      this.updateChart();
       // this.updateChart();
       // this.showNextGraph(0);
       // this.helper.snackFire({ message: "hello" });
@@ -594,7 +594,7 @@ export default {
     showNextGraph(num) {
       //init
       let { currentDisplayGraphObj, displayGraphListObj } = this.display;
-      console.log("current", currentDisplayGraphObj.graphType);
+      // console.log("current", currentDisplayGraphObj.graphType);
       //current index
       let graphKeyArry = Object.keys(displayGraphListObj);
       let currentName_i = 1;
@@ -615,9 +615,12 @@ export default {
       let nextGraphObj = displayGraphListObj[nextGraphObjKey];
       // this.display.currentDisplayGraphObj = nextGraphObj;
 
+      //初期データ保存
+
       //insert data
       let graphType_next = nextGraphObj.graphType;
-      console.log("next", graphType_next);
+
+      // console.log("next", graphType_next);
       switch (graphType_next) {
         case displayGraphListObj.V_Ip.graphType: {
           this.initGraph_V_Ip({ graphType: graphType_next });
@@ -647,6 +650,16 @@ export default {
           break;
         }
       }
+      // let autoFromToKey =
+      //   "autoFromToKey_" +
+      //   currentDisplayGraphObj.graphType +
+      //   "_" +
+      //   currentDisplayGraphObj.chartName;
+      // if (this.helper.db.isExist(autoFromToKey)) {
+      //   //none
+      // } else {
+      //   this.hepler.db.store(autoFromToKey);
+      // }
     },
     showScopeGraph() {
       let cpFile = JSON.parse(JSON.stringify(this.file));
@@ -689,7 +702,8 @@ export default {
         //ON->OFF
       } else {
         //OFF->ON
-        console.log(this.isAutoLine);
+        let toVal = 0;
+        let fromVal = 0;
         switch (this.display.currentDisplayGraphObj.graphType) {
           case this.display.displayGraphListObj.V_Ip.graphType: {
             //"V-Ip",
@@ -701,19 +715,30 @@ export default {
           }
           case this.display.displayGraphListObj.n_dIisdVp.graphType: {
             //"n-dIis/dVp",
-            let lineObj = this.$props.file.isatDataObj.diffData_leastLineObj;
-            lineObj.from = lineObj.from_auto;
-            lineObj.to = lineObj.to_auto;
+
+            let lineObj = this.display.currentDisplayGraphObj.data.addLineObj;
+
+            // let lineObj = this.$props.file.isatDataObj.diffData_leastLineObj;
+            let autoObj = this.$props.file.isatDataObj.isatData_fromto_auto;
+            lineObj.from = autoObj.from;
+            lineObj.to = autoObj.to;
+            fromVal = autoObj.from;
+            toVal = autoObj.to;
             break;
           }
           case this.display.displayGraphListObj.V_Iis.graphType: {
             //"V-Iis",
-            let lineObj = this.$props.file.isatDataObj.isatData_leastLineObj;
-            console.log(lineObj.from, lineObj.from_auto);
-            console.log(lineObj.to, lineObj.to_auto);
+            // console.log(this.display.currentDisplayGraphObj);
+            let lineObj = this.display.currentDisplayGraphObj.data.addLineObj;
 
-            lineObj.from = lineObj.from_auto;
-            lineObj.to = lineObj.to_auto;
+            // let lineObj = this.$props.file.isatDataObj.isatData_leastLineObj;
+            let autoObj = this.$props.file.isatDataObj.isatData_fromto_auto;
+
+            lineObj.from = autoObj.from;
+            lineObj.to = autoObj.to;
+            fromVal = autoObj.from;
+            toVal = autoObj.to;
+
             // return this.$props.file.isatDataObj.isatData_leastLineObj.from;
             break;
           }
@@ -723,7 +748,19 @@ export default {
             break;
           }
         }
-        this.updateChart();
+        let setFromObj = {
+          changeValue: fromVal,
+          displayGraphListObj: this.display.displayGraphListObj,
+          currentDisplayGraphObj: this.display.currentDisplayGraphObj,
+        };
+        let setToObj = {
+          changeValue: toVal,
+          displayGraphListObj: this.display.displayGraphListObj,
+          currentDisplayGraphObj: this.display.currentDisplayGraphObj,
+        };
+        this.$emit("changeTo", setToObj);
+        this.$emit("changeFrom", setFromObj);
+        this.updateChart("hard");
       }
     },
     //APIs

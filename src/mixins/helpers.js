@@ -12,6 +12,7 @@ let helpers = {
           get: this.getItem,
           delete: this.deleteItem,
           getKeyList: this.getItemKeyList,
+          isExist: this.isItemExist,
         },
       },
     };
@@ -90,6 +91,11 @@ let helpers = {
           return true;
         }
       });
+    },
+    isItemExist(key) {
+      let list = this.getItemKeyList();
+      if (list.indexOf(key) === -1) return false;
+      else return true;
     },
   },
   watch: {},
