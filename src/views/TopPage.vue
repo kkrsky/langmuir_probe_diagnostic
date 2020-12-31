@@ -740,7 +740,10 @@ export default {
       if (from !== undefined && to !== undefined) {
         from_i = from - 1; //indexに変換
         to_i = to - 1;
-        if (from_i < 0) window.alert("fromの値を自然数で入力してください。");
+        if (from_i < 0)
+          this.helper.snackFire({
+            message: "fromの値を自然数で入力してください。",
+          });
         originArry_edit = originArry.slice(from_i, to);
       } else {
         from_i = 0;
@@ -913,7 +916,7 @@ export default {
         leastLineObj: null,
         cnt: 0,
         originArry: diff_y_output,
-        a_coord_threshold: Number(8 * 1e-5),
+        a_coord_threshold: Number(6 * 1e-5),
       };
       let leastLineObj_diff = findGoodIsatPoint_recur(lsmObj);
       // console.log("leastLineObj_diff", leastLineObj_diff);

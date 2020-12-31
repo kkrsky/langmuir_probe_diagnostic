@@ -342,13 +342,16 @@ export default {
         let fromOld = this.$props.file.isatDataObj.diffData_leastLineObj.from;
         let toOld = this.$props.file.isatDataObj.diffData_leastLineObj.to;
         if (isNaN(Number(fromVal))) {
-          window.alert("数値を入力してください。");
+          this.helper.snackFire({ message: "数値を入力してください。" });
+          // this.helper.snackFire({ message: "" });
           fromVal = fromOld;
         } else {
           fromVal = Number(fromVal);
         }
         if (fromVal > toOld) {
-          window.alert("fromはtoよりも小さい値を入力して下さい。");
+          this.helper.snackFire({
+            message: "fromはtoよりも小さい値を入力して下さい。",
+          });
           fromVal = fromOld;
         }
 
@@ -400,18 +403,21 @@ export default {
         let dataLength = this.$props.file.isatDataObj.diffData_arry.length;
 
         if (isNaN(Number(toVal))) {
-          window.alert("数値を入力してください。");
+          this.helper.snackFire({ message: "数値を入力してください。" });
           toVal = toOld;
         } else {
           toVal = Number(toVal);
         }
         if (fromOld > toVal) {
-          window.alert("toはfromよりも小さい値を入力して下さい。");
+          this.helper.snackFire({
+            message: "toはfromよりも小さい値を入力して下さい。",
+          });
           toVal = toOld;
         } else if (toVal > dataLength) {
-          window.alert(
-            "最大データ数(" + dataLength + ") 以下の値を入力して下さい。"
-          );
+          this.helper.snackFire({
+            message:
+              "最大データ数(" + dataLength + ") 以下の値を入力して下さい。",
+          });
           toVal = toOld;
         }
         let setObj = {
