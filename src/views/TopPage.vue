@@ -701,6 +701,7 @@ export default {
     calcDiff_y(arry2D) {
       /**
        * @param {Array} arry [[x,y],...]
+       * @return {Array} [[i,diff],...]
        */
       let item = arry2D.map((dot, i) => {
         if (i < arry2D.length - 1) {
@@ -783,6 +784,7 @@ export default {
 
       return outputObj;
     },
+
     //action
     calcFloatVolt(formatText) {
       /**
@@ -834,11 +836,14 @@ export default {
       //エラー部分を除去 (次の点と比較して今の点が10倍以上異なる場合は除去)
       let diff_y_output = diff_y.filter((dot, i) => {
         if (i < diff_y.length - 1) {
-          let [cx, cy] = dot;
-          let [nx, ny] = diff_y[i + 1];
+          let [ci, cy] = dot;
+          let [ni, ny] = diff_y[i + 1];
           let threshold = 10;
 
-          if (Math.abs(cy / ny) > threshold) {
+          if (
+            Math.abs(cy / ny) > threshold ||
+            Math.abs(cy / ny) < 1 / threshold
+          ) {
             return false;
           } else {
             return true;
@@ -849,8 +854,8 @@ export default {
       });
 
       //極端なエラー値を除いたデータの平均算出
-      let calcAveArry = diff_y_output.map((val) => {
-        return val[1];
+      let calcAveArry = diff_y_output.map((dot) => {
+        return dot[1];
       });
       let diffAverage =
         calcAveArry.slice().reduce((acc, val) => {
@@ -862,20 +867,53 @@ export default {
       diff_y_output = diff_y_output.filter((dot, i) => {
         let [cx, cy] = dot;
         let threshold = 10;
-        if (Math.abs(cy / diffAverage) > threshold) return false;
+        if (
+          Math.abs(cy / diffAverage) > threshold ||
+          Math.abs(cy / diffAverage) < 1 / threshold
+        )
+          return false;
         else return true;
       });
 
       //平均二乗法によって傾き調整 (微分値なので単調増加の場合、傾きが０に近づけば良い、傾きが閾値以下になるまで計算)
       let findGoodIsatPoint_recur = (obj) => {
         if (obj.endLoop) {
-          return obj.result;
+          //傾きが閾値以下になった。
+          //開始位置の微調整
+
+          return obj.result; //obj.leastLineObj;
         } else {
           //init leastLineObj
           if (obj.leastLineObj === null) {
             obj.leastLineObj = this.createLeastSquareMethodLine({
               originArry: obj.originArry,
             });
+          }
+          //開始位置の微調整
+          if (obj.startAverage === null) {
+            //開始付近の平均算出
+            let threshold = 0.05; //データ総点数の10%を始点付近とする
+            let maxStartIndex = Math.floor(obj.originArry.length * threshold);
+            let startDataList = obj.originArry.slice(0, maxStartIndex);
+            let sum = startDataList.slice().reduce((acc, val) => {
+              acc[1] += val[1];
+              return acc;
+            })[1];
+            let startAverage = sum / maxStartIndex;
+            // console.log(startAverage);
+            //スタートポイント算出
+            let minVal = 1;
+            let minArry = [];
+            startDataList.forEach((val) => {
+              let diff = Math.abs(val[1] - startAverage);
+              if (minVal > diff) {
+                minVal = diff;
+                minArry = val;
+              }
+            });
+            //setter
+            obj.startAverage = startAverage;
+            obj.leastLineObj.from = minArry[0] + 1; //minArry[0]はindex
           }
 
           //check a_coord
@@ -914,6 +952,7 @@ export default {
         endLoop: false,
         result: null,
         leastLineObj: null,
+        startAverage: null,
         cnt: 0,
         originArry: diff_y_output,
         a_coord_threshold: Number(6 * 1e-5),
