@@ -54,8 +54,8 @@ export default {
         newElm.style.height = "50vh";
         newElm.style.width = "50vh";
       }
-      console.log("insertElm", insertElm, chartName, newElm);
-      console.log(JSON.parse(JSON.stringify(this.createChart)));
+      // console.log("insertElm", insertElm, chartName, newElm);
+      // console.log(JSON.parse(JSON.stringify(this.createChart)));
       insertElm.appendChild(newElm);
     },
     createChartVI({ chartName, labelName, setDataArry, addLineObj }) {

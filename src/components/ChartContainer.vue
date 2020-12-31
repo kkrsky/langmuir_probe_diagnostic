@@ -26,11 +26,14 @@
               <v-row>
                 <v-col>
                   <p>graph: {{ display.currentDisplayGraphObj.graphType }}</p>
-                  <p>
-                    {{ file.isatDataObj.diffData_leastLineObj.error.message }}
+                  <p v-if="currentData.addLineObj">
+                    <!-- {{ file.isatDataObj.diffData_leastLineObj.error.message }} -->
+                    <!-- {{ currentData.addLineObj }} -->
+                    <!-- {{ currentData.addLineObj.error.message }} -->
                   </p>
-                  <p>
-                    {{ file.isatDataObj.diffData_leastLineObj.a_coord }}
+                  <p v-if="currentData.addLineObj">
+                    <!-- {{ file.isatDataObj.diffData_leastLineObj.a_coord }} -->
+                    {{ currentData.addLineObj.a_coord }}
                   </p>
 
                   <div class="setting-router-container">
@@ -60,7 +63,11 @@
 
               <v-row>
                 <v-col cols="4">
-                  <v-checkbox v-model="isEditManual" label="manual">
+                  <v-checkbox
+                    @click="onAutoLine"
+                    v-model="isAutoLine"
+                    label="Auto"
+                  >
                   </v-checkbox>
                 </v-col>
                 <v-col>
@@ -68,9 +75,9 @@
                     class="mx-2"
                     label="from"
                     rows="1"
-                    v-model="fromLine"
+                    v-model.lazy="fromLine"
                     prepend-icon="mdi-ray-start"
-                    :disabled="!isEditManual"
+                    :disabled="isAutoLine"
                   ></v-textarea>
                 </v-col>
                 <v-col>
@@ -78,9 +85,9 @@
                     class="mx-2"
                     label="to"
                     rows="1"
-                    v-model="toLine"
+                    v-model.lazy="toLine"
                     prepend-icon="mdi-ray-end"
-                    :disabled="!isEditManual"
+                    :disabled="isAutoLine"
                   ></v-textarea>
                 </v-col>
               </v-row>
@@ -93,7 +100,7 @@
           </div>
         </div>
         <!-- ------------- -->
-        <!-- normal viewer -->
+        <!-- /normal viewer -->
         <!-- ------------- -->
       </template>
       <v-card>
@@ -217,7 +224,27 @@ export default {
         _templateObj: {
           graphType: "template",
           data: {
-            file: null,
+            file: {
+              id: null,
+              attribute: null,
+              name: null,
+              fileName: null,
+              rawText: null,
+              formatText: null,
+              scatterData: null,
+              floatVolt: null,
+              isatDataObj: {
+                //diff data
+                diffData_arry: null,
+                diffData_scatter: null,
+                diffData_leastLineObj: null,
+                //isat data
+                isatData_arry: null,
+                isatData_scatter: null,
+                isatData_leastLineObj: null,
+                isat: null,
+              },
+            },
             chartName: null,
             labelName: null,
             setDataArry: null,
@@ -231,7 +258,10 @@ export default {
           reload: 0, //再描画用,再描画する際にインクリメントする
         },
         scopedDisplayGraphObj: { graphType: "scoped" },
-        currentDisplayGraphObj: { graphType: "V-Ip" },
+        currentDisplayGraphObj: {
+          graphType: "V-Ip",
+          data: {},
+        },
         displayGraphListObj: {
           V_Ip: { graphType: "V-Ip" },
           V_LogIe: { graphType: "V-Log(Ie)" },
@@ -242,7 +272,8 @@ export default {
 
         // displayGraphListObj: ["V-Ip", "V-Log(Ie)", "n-dIis/dVp", "V-Iis", "test"],
       },
-      isEditManual: false,
+      isAutoLine: true,
+
       resultObj: {
         Iis_fit: 1,
         Ies_calc: 0.03343,
@@ -274,6 +305,10 @@ export default {
     };
   },
   computed: {
+    currentData() {
+      // console.log(this.display.currentDisplayGraphObj.data);
+      return this.display.currentDisplayGraphObj.data;
+    },
     fromLine: {
       get() {
         switch (this.display.currentDisplayGraphObj.graphType) {
@@ -286,17 +321,19 @@ export default {
             break;
           }
           case this.display.displayGraphListObj.n_dIisdVp.graphType: {
+            return this.$props.file.isatDataObj.diffData_leastLineObj.from;
             //"n-dIis/dVp",
             break;
           }
           case this.display.displayGraphListObj.V_Iis.graphType: {
-            //"V-Iis",
             return this.$props.file.isatDataObj.isatData_leastLineObj.from;
+            //"V-Iis",
+            // return this.$props.file.isatDataObj.isatData_leastLineObj.from;
             break;
           }
           case this.display.displayGraphListObj.test.graphType: {
             //"test"
-            return this.$props.file.isatDataObj.diffData_leastLineObj.from;
+            // return this.$props.file.isatDataObj.diffData_leastLineObj.from;
             break;
           }
         }
@@ -338,16 +375,20 @@ export default {
           }
           case this.display.displayGraphListObj.n_dIisdVp.graphType: {
             //"n-dIis/dVp",
+            return this.$props.file.isatDataObj.diffData_leastLineObj.to;
+
             break;
           }
           case this.display.displayGraphListObj.V_Iis.graphType: {
             //"V-Iis",
             return this.$props.file.isatDataObj.isatData_leastLineObj.to;
+
+            // return this.$props.file.isatDataObj.isatData_leastLineObj.to;
             break;
           }
           case this.display.displayGraphListObj.test.graphType: {
             //"test"
-            return this.$props.file.isatDataObj.diffData_leastLineObj.to;
+            // return this.$props.file.isatDataObj.diffData_leastLineObj.to;
 
             break;
           }
@@ -392,31 +433,6 @@ export default {
       // this.updateChart();
       // this.showNextGraph(0);
     },
-    initGraph_V_Ip({ graphType }) {
-      let createChartObj = {
-        graphType,
-        data: {
-          file: this.file,
-          chartName: this.file.name,
-          labelName: this.file.name,
-          setDataArry: this.file.scatterData,
-        },
-        setting: {
-          fontSize: this.fontSize,
-          axis: this.axis,
-          point: this.point,
-          chartType: this.chartType,
-        },
-        reload: 0, //再描画用,再描画する際にインクリメントする
-      };
-
-      // this.createChartObj = createChartObj;
-      this.display.currentDisplayGraphObj = createChartObj;
-      this.display.displayGraphListObj.V_Ip = createChartObj;
-      // console.log("createChartObj", createChartObj);
-      this.updateChart();
-      return createChartObj;
-    },
     initDialogGraph({ graphType }) {
       // this.destroyGraph();
       let createChartObj = {
@@ -451,14 +467,59 @@ export default {
 
       // }, 10);
     },
-    initTestGraph({ graphType }) {
-      //setting
+    initGraph_V_Ip({ graphType }) {
       let createChartObj = {
         graphType,
         data: {
           file: this.file,
-          chartName: "test-graph-" + this.file.name,
-          labelName: "test-graph-" + this.file.name,
+          chartName: this.file.name,
+          labelName: this.file.name,
+          setDataArry: this.file.scatterData,
+        },
+        setting: {
+          fontSize: this.fontSize,
+          axis: this.axis,
+          point: this.point,
+          chartType: this.chartType,
+        },
+        reload: 0, //再描画用,再描画する際にインクリメントする
+      };
+
+      // this.createChartObj = createChartObj;
+      this.display.currentDisplayGraphObj = createChartObj;
+      this.display.displayGraphListObj.V_Ip = createChartObj;
+      // console.log("createChartObj", createChartObj);
+      this.updateChart();
+      return createChartObj;
+    },
+    initGraph_V_LogIe({ graphType }) {
+      let createChartObj = {
+        graphType,
+        // data: {
+        //   file: this.file,
+        //   chartName: this.file.name,
+        //   labelName: this.file.name,
+        //   setDataArry: this.file.isatDataObj.diffData_scatter,
+        //   addLineObj: this.file.isatDataObj.diffData_leastLineObj,
+        // },
+        // setting: {
+        //   fontSize: this.fontSize,
+        //   axis: this.axis,
+        //   point: this.point,
+        //   chartType: this.chartType,
+        // },
+        reload: 0,
+      };
+      this.display.currentDisplayGraphObj = createChartObj;
+      this.updateChart();
+    },
+    initGraph_n_dIisdVp({ graphType }) {
+      let createChartObj = {
+        graphType,
+        data: {
+          file: this.file,
+          chartName: "n_dIisdVp-graph-" + this.file.name,
+          labelName: "n_dIisdVp-graph-" + this.file.name,
           setDataArry: this.file.isatDataObj.diffData_scatter,
           addLineObj: this.file.isatDataObj.diffData_leastLineObj,
         },
@@ -474,6 +535,51 @@ export default {
       this.display.currentDisplayGraphObj = createChartObj;
       this.display.displayGraphListObj.test = createChartObj;
       this.updateChart();
+    },
+    initGraph_V_Iis({ graphType }) {
+      let createChartObj = {
+        graphType,
+        data: {
+          file: this.file,
+          chartName: "V_Iis-graph" + this.file.name,
+          labelName: "V_Iis-graph" + this.file.name,
+          setDataArry: this.file.isatDataObj.isatData_scatter,
+          addLineObj: this.file.isatDataObj.isatData_leastLineObj,
+        },
+        setting: {
+          fontSize: this.fontSize,
+          axis: this.axis,
+          point: this.point,
+          chartType: this.chartType,
+        },
+        reload: 0,
+      };
+      this.display.currentDisplayGraphObj = createChartObj;
+      this.updateChart();
+    },
+    initTestGraph({ graphType }) {
+      //setting
+      let createChartObj = {
+        graphType,
+        // data: {
+        //   file: this.file,
+        //   chartName: this.file.name,
+        //   labelName: this.file.name,
+        //   setDataArry: this.file.isatDataObj.diffData_scatter,
+        //   addLineObj: this.file.isatDataObj.diffData_leastLineObj,
+        // },
+        // setting: {
+        //   fontSize: this.fontSize,
+        //   axis: this.axis,
+        //   point: this.point,
+        //   chartType: this.chartType,
+        // },
+        reload: 0,
+      };
+      // this.createChartObj = createChartObj;
+      this.display.currentDisplayGraphObj = createChartObj;
+      this.display.displayGraphListObj.test = createChartObj;
+      this.updateChart();
       return createChartObj;
     },
 
@@ -481,7 +587,7 @@ export default {
     showNextGraph(num) {
       //init
       let { currentDisplayGraphObj, displayGraphListObj } = this.display;
-
+      console.log("current", currentDisplayGraphObj.graphType);
       //current index
       let graphKeyArry = Object.keys(displayGraphListObj);
       let currentName_i = 1;
@@ -504,9 +610,27 @@ export default {
 
       //insert data
       let graphType_next = nextGraphObj.graphType;
+      console.log("next", graphType_next);
       switch (graphType_next) {
         case displayGraphListObj.V_Ip.graphType: {
           this.initGraph_V_Ip({ graphType: graphType_next });
+          // console.log("updated", this.display.currentDisplayGraphObj);
+          break;
+        }
+        case this.display.displayGraphListObj.V_LogIe.graphType: {
+          // "V-Log(Ie)",
+          this.initGraph_V_LogIe({ graphType: graphType_next });
+          break;
+        }
+        case this.display.displayGraphListObj.n_dIisdVp.graphType: {
+          //"n-dIis/dVp",
+          this.initGraph_n_dIisdVp({ graphType: graphType_next });
+
+          break;
+        }
+        case this.display.displayGraphListObj.V_Iis.graphType: {
+          //"V-Iis",
+          this.initGraph_V_Iis({ graphType: graphType_next });
 
           break;
         }
@@ -552,6 +676,48 @@ export default {
     //button actions
     onChangeFromToVal(val) {
       console.log(val);
+    },
+    onAutoLine() {
+      if (!this.isAutoLine) {
+        //ON->OFF
+      } else {
+        //OFF->ON
+        console.log(this.isAutoLine);
+        switch (this.display.currentDisplayGraphObj.graphType) {
+          case this.display.displayGraphListObj.V_Ip.graphType: {
+            //"V-Ip",
+            break;
+          }
+          case this.display.displayGraphListObj.V_LogIe.graphType: {
+            // "V-Log(Ie)",
+            break;
+          }
+          case this.display.displayGraphListObj.n_dIisdVp.graphType: {
+            //"n-dIis/dVp",
+            let lineObj = this.$props.file.isatDataObj.diffData_leastLineObj;
+            lineObj.from = lineObj.from_auto;
+            lineObj.to = lineObj.to_auto;
+            break;
+          }
+          case this.display.displayGraphListObj.V_Iis.graphType: {
+            //"V-Iis",
+            let lineObj = this.$props.file.isatDataObj.isatData_leastLineObj;
+            console.log(lineObj.from, lineObj.from_auto);
+            console.log(lineObj.to, lineObj.to_auto);
+
+            lineObj.from = lineObj.from_auto;
+            lineObj.to = lineObj.to_auto;
+            // return this.$props.file.isatDataObj.isatData_leastLineObj.from;
+            break;
+          }
+          case this.display.displayGraphListObj.test.graphType: {
+            //"test"
+            // return this.$props.file.isatDataObj.diffData_leastLineObj.from;
+            break;
+          }
+        }
+        this.updateChart();
+      }
     },
     //APIs
     //tes2334567
@@ -684,6 +850,7 @@ export default {
         chartObj.update();
       }
     },
+
     // createCanvasElement({ chartName }) {
     //   let insertElm = window.document.getElementById(
     //     "canvas-wrapper-" + chartName

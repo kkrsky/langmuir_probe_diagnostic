@@ -241,38 +241,46 @@ export default {
     },
     setChange(target, changeObj, file) {
       let displayLeastGraphChanger_tofrom = (typeVal) => {
+        let syncLeastLineObj = ({ originArry: dataArry, from, to }) => {
+          return this.createLeastSquareMethodLine({
+            originArry: dataArry,
+            from,
+            to,
+          });
+        };
         //parser
         // console.log("changeObj", changeObj);
         let {
           changeValue,
-          displayGraphList,
-          currentDisplayGraphName,
+          displayGraphListObj,
+          currentDisplayGraphObj,
         } = changeObj;
         let leastLineObj_origin = null;
         let dataArry = null;
-        switch (currentDisplayGraphName) {
-          case displayGraphList[0]: {
+        switch (currentDisplayGraphObj.graphType) {
+          case displayGraphListObj.V_Ip.graphType: {
             //"V-Ip",
             break;
           }
-          case displayGraphList[1]: {
+          case displayGraphListObj.V_LogIe.graphType: {
             // "V-Log(Ie)",
             break;
           }
-          case displayGraphList[2]: {
+          case displayGraphListObj.n_dIisdVp.graphType: {
             //"n-dIis/dVp",
+            leastLineObj_origin = file.isatDataObj.diffData_leastLineObj;
+            dataArry = file.isatDataObj.diffData_arry;
             break;
           }
-          case displayGraphList[3]: {
+          case displayGraphListObj.V_Iis.graphType: {
             //"V-Iis",
             leastLineObj_origin = file.isatDataObj.isatData_leastLineObj;
             dataArry = file.isatDataObj.isatData_arry;
             break;
           }
-          case displayGraphList[4]: {
+          case displayGraphListObj.test.graphType: {
             //"test"
-            leastLineObj_origin = file.isatDataObj.diffData_leastLineObj;
-            dataArry = file.isatDataObj.diffData_arry;
+
             break;
           }
         }
@@ -283,6 +291,7 @@ export default {
         //treat
         if (typeVal === "from") from = changeValue;
         if (typeVal === "to") to = changeValue;
+
         let leastLineObj_new = this.createLeastSquareMethodLine({
           originArry: dataArry,
           from,
@@ -290,7 +299,44 @@ export default {
         });
 
         //setter
-        file.isatDataObj.diffData_leastLineObj = leastLineObj_new;
+        switch (currentDisplayGraphObj.graphType) {
+          case displayGraphListObj.V_Ip.graphType: {
+            //"V-Ip",
+            break;
+          }
+          case displayGraphListObj.V_LogIe.graphType: {
+            // "V-Log(Ie)",
+            break;
+          }
+          case displayGraphListObj.n_dIisdVp.graphType: {
+            //"n-dIis/dVp",
+            file.isatDataObj.diffData_leastLineObj = leastLineObj_new;
+            let dataArry_isat = file.isatDataObj.isatData_arry;
+            file.isatDataObj.isatData_leastLineObj = syncLeastLineObj({
+              originArry: dataArry_isat,
+              from,
+              to,
+            });
+
+            break;
+          }
+          case displayGraphListObj.V_Iis.graphType: {
+            //"V-Iis",
+            file.isatDataObj.isatData_leastLineObj = leastLineObj_new;
+            let dataArry_diff = file.isatDataObj.diffData_arry;
+            file.isatDataObj.diffData_leastLineObj = syncLeastLineObj({
+              originArry: dataArry_diff,
+              from,
+              to,
+            });
+            break;
+          }
+          case displayGraphListObj.test.graphType: {
+            //"test"
+
+            break;
+          }
+        }
         // console.log("leastLineObj_origin after", leastLineObj_origin);
       };
       switch (target) {
@@ -361,8 +407,6 @@ export default {
               rawText: rawText,
               formatText: formatTextArry,
               scatterData: scatterData,
-
-              data: null,
               floatVolt: floatVolt,
               isatDataObj,
             };
@@ -715,11 +759,15 @@ export default {
       // console.log(output.slice(0, 1), to);
       from = from_i + 1;
       to = to_i + 1;
+      const from_auto = from;
+      const to_auto = to;
       let outputObj = {
         lineData: output,
         lineData_scatter: this.data2ScatterData(output),
         from,
         to,
+        from_auto,
+        to_auto,
         a_coord: a,
         b_coord: b,
         error: {
@@ -876,7 +924,7 @@ export default {
       });
 
       //出力オブジェクト形成
-      let outputObj = {
+      let isatDataObj = {
         //diff data
         diffData_arry: diff_y_output,
         diffData_scatter: this.data2ScatterData(diff_y_output),
@@ -889,7 +937,7 @@ export default {
       };
 
       // console.log("diffData_leastLineObj", outputObj.diffData_leastLineObj);
-      return outputObj;
+      return isatDataObj;
     },
 
     ////////////////////////////
