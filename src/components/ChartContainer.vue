@@ -40,7 +40,7 @@
                     <v-btn icon color="gray" @click="showNextGraph(1)">
                       <v-icon>mdi-arrow-right-bold-circle</v-icon>
                     </v-btn>
-                    <v-btn
+                    <!-- <v-btn
                       icon
                       color="gray"
                       @click="initDialogGraph({ graphType: 'V-Ip [scoped]' })"
@@ -49,7 +49,7 @@
                       v-on="on"
                     >
                       <v-icon>mdi-arrow-top-right-bottom-left-bold</v-icon>
-                    </v-btn>
+                    </v-btn> -->
                   </div>
                 </v-col>
                 <v-col>
