@@ -18,14 +18,14 @@
               class="graph-container"
             ></div> -->
           <create-chart
-            :createChart="createChartObj"
-            :key="createChartObj.reload"
+            :createChart="display.currentDisplayGraphObj"
+            :key="display.currentDisplayGraphObj.reload"
           ></create-chart>
           <div class="setting-container">
             <v-container class="setting-start-from-container">
               <v-row>
                 <v-col>
-                  <p>graph: {{ display.currentDisplayGraphName }}</p>
+                  <p>graph: {{ display.currentDisplayGraphObj.graphType }}</p>
                   <p>
                     {{ file.isatDataObj.diffData_leastLineObj.error.message }}
                   </p>
@@ -43,20 +43,12 @@
                     <v-btn
                       icon
                       color="gray"
-                      @click="initDialogGraph()"
+                      @click="initDialogGraph({ graphType: 'V-Ip [scoped]' })"
                       v-if="file.attribute === 'normal'"
                       v-bind="attrs"
                       v-on="on"
                     >
                       <v-icon>mdi-arrow-top-right-bottom-left-bold</v-icon>
-                    </v-btn>
-                    <v-btn
-                      icon
-                      color="gray"
-                      @click="destroyGraph()"
-                      v-if="file.attribute === 'scoped'"
-                    >
-                      <v-icon>mdi-close-circle</v-icon>
                     </v-btn>
                   </div>
                 </v-col>
@@ -112,7 +104,15 @@
           <v-toolbar-title>[scoped] {{ file.name }}</v-toolbar-title>
           <v-spacer></v-spacer>
           <v-toolbar-items>
-            <v-btn dark text @click="destroyGraph()">
+            <v-btn
+              dark
+              text
+              @click="
+                destroyGraph({
+                  chartName: display.scopedDisplayGraphObj.data.chartName,
+                })
+              "
+            >
               Done
             </v-btn>
           </v-toolbar-items>
@@ -129,13 +129,13 @@
                 class="graph-container"
               ></div> -->
             <create-chart
-              :createChart="createChartObj"
-              :key="createChartObj.reload"
+              :createChart="display.scopedDisplayGraphObj"
+              :key="display.scopedDisplayGraphObj.reload"
             ></create-chart>
 
             <div class="setting-container">
               <!-- <h3>file: {{ file.name }}</h3> -->
-              <p>graph: {{ display.currentDisplayGraphName }}</p>
+              <p>graph: {{ display.scopedDisplayGraphObj.graphType }}</p>
               <div class="setting-router-container">
                 <v-btn icon color="gray" @click="showNextGraph(-1)">
                   <v-icon>mdi-arrow-left-bold-circle</v-icon>
@@ -143,11 +143,14 @@
                 <v-btn icon color="gray" @click="showNextGraph(1)">
                   <v-icon>mdi-arrow-right-bold-circle</v-icon>
                 </v-btn>
+                <v-btn @click="testChartContainer()">test</v-btn>
               </div>
             </div>
             <div class="result-container">
-              result{{ file.name }}
-              <table-component></table-component>
+              <!-- result{{ file.name }} -->
+              <result-table :result="resultObj"></result-table>
+
+              <!-- <table-component></table-component> -->
             </div>
           </div>
         </div>
@@ -211,8 +214,33 @@ export default {
 
       //uppper
       display: {
-        currentDisplayGraphName: "V-Ip",
-        displayGraphList: ["V-Ip", "V-Log(Ie)", "n-dIis/dVp", "V-Iis", "test"],
+        _templateObj: {
+          graphType: "template",
+          data: {
+            file: null,
+            chartName: null,
+            labelName: null,
+            setDataArry: null,
+          },
+          setting: {
+            fontSize: null,
+            axis: null,
+            point: null,
+            chartType: null,
+          },
+          reload: 0, //再描画用,再描画する際にインクリメントする
+        },
+        scopedDisplayGraphObj: { graphType: "scoped" },
+        currentDisplayGraphObj: { graphType: "V-Ip" },
+        displayGraphListObj: {
+          V_Ip: { graphType: "V-Ip" },
+          V_LogIe: { graphType: "V-Log(Ie)" },
+          n_dIisdVp: { graphType: "n-dIis/dVp" },
+          V_Iis: { graphType: "V-Iis" },
+          test: { graphType: "test" },
+        },
+
+        // displayGraphListObj: ["V-Ip", "V-Log(Ie)", "n-dIis/dVp", "V-Iis", "test"],
       },
       isEditManual: false,
       resultObj: {
@@ -227,31 +255,46 @@ export default {
       /**
        * //methods data
        */
-      createChartObj: {},
+      createChartObj: {
+        graphType: null,
+        data: {
+          file: null,
+          chartName: null,
+          labelName: null,
+          setDataArry: null,
+        },
+        setting: {
+          fontSize: null,
+          axis: null,
+          point: null,
+          chartType: null,
+        },
+        reload: 0, //再描画用,再描画する際にインクリメントする
+      },
     };
   },
   computed: {
     fromLine: {
       get() {
-        switch (this.display.currentDisplayGraphName) {
-          case this.display.displayGraphList[0]: {
+        switch (this.display.currentDisplayGraphObj.graphType) {
+          case this.display.displayGraphListObj.V_Ip.graphType: {
             //"V-Ip",
             break;
           }
-          case this.display.displayGraphList[1]: {
+          case this.display.displayGraphListObj.V_LogIe.graphType: {
             // "V-Log(Ie)",
             break;
           }
-          case this.display.displayGraphList[2]: {
+          case this.display.displayGraphListObj.n_dIisdVp.graphType: {
             //"n-dIis/dVp",
             break;
           }
-          case this.display.displayGraphList[3]: {
+          case this.display.displayGraphListObj.V_Iis.graphType: {
             //"V-Iis",
             return this.$props.file.isatDataObj.isatData_leastLineObj.from;
             break;
           }
-          case this.display.displayGraphList[4]: {
+          case this.display.displayGraphListObj.test.graphType: {
             //"test"
             return this.$props.file.isatDataObj.diffData_leastLineObj.from;
             break;
@@ -271,10 +314,12 @@ export default {
           window.alert("fromはtoよりも小さい値を入力して下さい。");
           fromVal = fromOld;
         }
+
+        //create object
         let setObj = {
           changeValue: fromVal,
-          displayGraphList: this.display.displayGraphList,
-          currentDisplayGraphName: this.display.currentDisplayGraphName,
+          displayGraphListObj: this.display.displayGraphListObj,
+          currentDisplayGraphObj: this.display.currentDisplayGraphObj,
         };
         this.$emit("changeFrom", setObj);
         this.updateChart("hard");
@@ -282,27 +327,28 @@ export default {
     },
     toLine: {
       get() {
-        switch (this.display.currentDisplayGraphName) {
-          case this.display.displayGraphList[0]: {
+        switch (this.display.currentDisplayGraphObj.graphType) {
+          case this.display.displayGraphListObj.V_Ip.graphType: {
             //"V-Ip",
             break;
           }
-          case this.display.displayGraphList[1]: {
+          case this.display.displayGraphListObj.V_LogIe.graphType: {
             // "V-Log(Ie)",
             break;
           }
-          case this.display.displayGraphList[2]: {
+          case this.display.displayGraphListObj.n_dIisdVp.graphType: {
             //"n-dIis/dVp",
             break;
           }
-          case this.display.displayGraphList[3]: {
+          case this.display.displayGraphListObj.V_Iis.graphType: {
             //"V-Iis",
             return this.$props.file.isatDataObj.isatData_leastLineObj.to;
             break;
           }
-          case this.display.displayGraphList[4]: {
+          case this.display.displayGraphListObj.test.graphType: {
             //"test"
             return this.$props.file.isatDataObj.diffData_leastLineObj.to;
+
             break;
           }
         }
@@ -329,8 +375,8 @@ export default {
         }
         let setObj = {
           changeValue: toVal,
-          displayGraphList: this.display.displayGraphList,
-          currentDisplayGraphName: this.display.currentDisplayGraphName,
+          displayGraphListObj: this.display.displayGraphListObj,
+          currentDisplayGraphObj: this.display.currentDisplayGraphObj,
         };
         this.$emit("changeTo", setObj);
         this.updateChart("hard");
@@ -339,66 +385,61 @@ export default {
   },
   methods: {
     testChartContainer() {
-      console.log(this.file.isatDataObj);
+      // console.log(this.file.isatDataObj);
+      console.log(this.display);
+      console.log("chartList", this.$store.state.main.chartList);
+      this.updateChart();
       // this.updateChart();
-      this.showNextGraph(0);
+      // this.showNextGraph(0);
     },
-    initChart() {
-      let fontSize = this.fontSize;
-      let axis = this.axis;
-      let point = this.point;
-      let chartType = this.chartType;
-      let file = this.file;
-      let chartName = this.file.name;
-      let labelName = this.file.name;
-      let setDataArry = this.file.scatterData;
+    initGraph_V_Ip({ graphType }) {
       let createChartObj = {
-        data: { file, chartName, labelName, setDataArry },
+        graphType,
+        data: {
+          file: this.file,
+          chartName: this.file.name,
+          labelName: this.file.name,
+          setDataArry: this.file.scatterData,
+        },
         setting: {
-          fontSize,
-          axis,
-          point,
-          chartType,
+          fontSize: this.fontSize,
+          axis: this.axis,
+          point: this.point,
+          chartType: this.chartType,
         },
         reload: 0, //再描画用,再描画する際にインクリメントする
       };
-      // let addChartObj = {
-      //   chartName: this.file.name,
-      //   labelName: this.file.name,
-      //   setDataArry: this.file.scatterData,
-      // };
-      // this.createCanvasElement(addChartObj);
-      // this.createChartVI(addChartObj);
-      //   });
-      this.createChartObj = createChartObj;
+
+      // this.createChartObj = createChartObj;
+      this.display.currentDisplayGraphObj = createChartObj;
+      this.display.displayGraphListObj.V_Ip = createChartObj;
+      // console.log("createChartObj", createChartObj);
       this.updateChart();
+      return createChartObj;
     },
-    initDialogGraph() {
+    initDialogGraph({ graphType }) {
       // this.destroyGraph();
-
-      //setting
-      let fontSize = this.fontSize;
-      let axis = this.axis;
-      let point = this.point;
-      let chartType = this.chartType;
-
-      //data
-      let file = this.file;
-      let chartName = this.file.name + "-scoped";
-      let labelName = this.file.name + "-scoped";
-      let setDataArry = this.file.scatterData;
       let createChartObj = {
-        data: { file, chartName, labelName, setDataArry },
-        setting: {
-          fontSize,
-          axis,
-          point,
-          chartType,
+        graphType,
+        data: {
+          file: this.file,
+          chartName: this.file.name + "-scoped",
+          labelName: this.file.name + "-scoped",
+          setDataArry: this.file.scatterData,
         },
-        reload: 0,
+        setting: {
+          fontSize: this.fontSize,
+          axis: this.axis,
+          point: this.point,
+          chartType: this.chartType,
+        },
+        reload: 0, //再描画用,再描画する際にインクリメントする
       };
-      this.createChartObj = createChartObj;
-      this.updateChart();
+
+      // this.createChartObj = createChartObj;
+      this.display.scopedDisplayGraphObj = createChartObj;
+      // this.display.currentDisplayGraphObj = createChartObj;
+      // this.updateChart();
       // window.setTimeout(() => {
       //   let addChartObj = {
       //     chartName: this.file.name + "-scoped",
@@ -410,21 +451,10 @@ export default {
 
       // }, 10);
     },
-    initTestGraph() {
+    initTestGraph({ graphType }) {
       //setting
-      let fontSize = this.fontSize;
-      let axis = this.axis;
-      let point = this.point;
-      let chartType = this.chartType;
-
-      //data
-      // let file = this.file;
-      // let chartName = "test-graph-" + this.file.name;
-      // let labelName = "test-graph-" + this.file.name;
-      // let setDataArry = this.file.isatDataObj.diffData_scatter;
-      // let addLineObj = this.file.isatDataObj.diffData_leastLineObj;
-      //create
       let createChartObj = {
+        graphType,
         data: {
           file: this.file,
           chartName: "test-graph-" + this.file.name,
@@ -433,20 +463,75 @@ export default {
           addLineObj: this.file.isatDataObj.diffData_leastLineObj,
         },
         setting: {
-          fontSize,
-          axis,
-          point,
-          chartType,
+          fontSize: this.fontSize,
+          axis: this.axis,
+          point: this.point,
+          chartType: this.chartType,
         },
         reload: 0,
       };
-      this.createChartObj = createChartObj;
+      // this.createChartObj = createChartObj;
+      this.display.currentDisplayGraphObj = createChartObj;
+      this.display.displayGraphListObj.test = createChartObj;
       this.updateChart();
+      return createChartObj;
+    },
 
+    //views
+    showNextGraph(num) {
       //init
-      // this.emit.from = this.file.isatDataObj.diffData_leastLineObj.from;
-      // this.emit.to = this.file.isatDataObj.diffData_leastLineObj.to;
-      // console.log("init", this.emit.from, this.emit.to, addLineObj);
+      let { currentDisplayGraphObj, displayGraphListObj } = this.display;
+
+      //current index
+      let graphKeyArry = Object.keys(displayGraphListObj);
+      let currentName_i = 1;
+      for (const [index, graphKey] of graphKeyArry.entries()) {
+        if (
+          displayGraphListObj[graphKey].graphType ===
+          currentDisplayGraphObj.graphType
+        ) {
+          currentName_i = index;
+          break;
+        }
+      }
+
+      //next index
+      if (currentName_i + num < 0) currentName_i = graphKeyArry.length;
+      let nextGraphObjKey =
+        graphKeyArry[(currentName_i + num) % graphKeyArry.length];
+      let nextGraphObj = displayGraphListObj[nextGraphObjKey];
+      // this.display.currentDisplayGraphObj = nextGraphObj;
+
+      //insert data
+      let graphType_next = nextGraphObj.graphType;
+      switch (graphType_next) {
+        case displayGraphListObj.V_Ip.graphType: {
+          this.initGraph_V_Ip({ graphType: graphType_next });
+
+          break;
+        }
+        case displayGraphListObj.test.graphType: {
+          this.initTestGraph({ graphType: graphType_next });
+
+          break;
+        }
+      }
+    },
+    showScopeGraph() {
+      let cpFile = JSON.parse(JSON.stringify(this.file));
+      // this.$emit("show-scope-graph", cpFile);
+    },
+    destroyGraph({ chartName }) {
+      // this.$emit("destroy");
+      this.isShowDialog = false;
+      let currentChart = this.$store.getters["main/getChartObj2"][chartName];
+      currentChart.destroy();
+      // this.currentChart.destroy();
+      // this.display.scopedDisplayGraphObj.destroy();
+
+      const element = document.getElementById("canvas-" + chartName);
+      // console.log("element", element);
+      element.remove();
     },
     updateChart(type) {
       //データを更新した後、グラフを再描画する。
@@ -458,41 +543,10 @@ export default {
       } else {
         //簡易アップデート(propで受け取った値をコピーしたものは更新されない)
         window.setTimeout(() => {
-          this.createChartObj.reload++;
+          this.display.currentDisplayGraphObj.reload++;
+          // this.createChartObj.reload++;
         }, 1);
       }
-    },
-
-    //views
-    showNextGraph(num) {
-      let { currentDisplayGraphName, displayGraphList } = this.display;
-      let currentName_i = displayGraphList.indexOf(currentDisplayGraphName);
-      if (currentName_i + num < 0) currentName_i = displayGraphList.length;
-      let nextName =
-        displayGraphList[(currentName_i + num) % displayGraphList.length];
-      this.display.currentDisplayGraphName = nextName;
-
-      if (nextName === "VI-parameter") {
-        // this.destroyGraph();
-        this.initChart();
-      } else if (nextName === "test") {
-        // this.destroyGraph();
-        this.initTestGraph();
-      }
-    },
-    showScopeGraph() {
-      let cpFile = JSON.parse(JSON.stringify(this.file));
-      // this.$emit("show-scope-graph", cpFile);
-    },
-    destroyGraph() {
-      // this.$emit("destroy");
-      this.isShowDialog = false;
-      this.currentChart.destroy();
-      console.log("canvas-" + this.file.name + "-scoped");
-      const element = document.getElementById(
-        "canvas-" + this.file.name + "-scoped"
-      );
-      element.remove();
     },
 
     //button actions
@@ -501,114 +555,114 @@ export default {
     },
     //APIs
     //tes2334567
-    createChartVI({ chartName, labelName, setDataArry }) {
-      //   console.log(chartName, labelName)
-      let chartVI_ctx = window.document
-        .getElementById("canvas-" + chartName)
-        .getContext("2d");
-      let chartData = new Chart(chartVI_ctx, {
-        type: this.chartType,
-        data: {
-          datasets: [
-            {
-              label: labelName,
-              data: setDataArry,
-              backgroundColor: this.point.color,
-              pointRadius: this.point.size,
-              pointHoverRadius: this.point.hoverSize,
-              pointHitRadius: this.point.pointHitRadius,
-            },
-            // {
-            //   label: "label2",
-            //   data: [
-            //     { x: 0, y: 1 },
-            //     { x: 0, y: 1 },
-            //   ],
-            //   backgroundColor: "RGBA(225,95,150, 1)",
-            // },
-          ],
-        },
-        options: {
-          //   title: {
-          //     display: true,
-          //     text: "V-I characteristics",
-          //     fontSize: this.fontSize.title,
-          //   },
-          legend: {
-            labels: {
-              fontSize: this.fontSize.label,
-            },
-          },
-          scales: {
-            xAxes: [
-              {
-                scaleLabel: {
-                  display: true,
-                  labelString: this.axis.x.labelName,
-                  fontSize: this.fontSize.title,
-                },
-                ticks: {
-                  fontSize: this.fontSize.axis,
-                  suggestedMin: this.axis.x.maxSize,
-                  suggestedMax: this.axis.x.minSize,
-                  stepSize: this.axis.x.stepSize,
-                  // callback: function(value, index, values) {
-                  //   return value + "点";
-                  // },
-                },
-              },
-            ],
-            yAxes: [
-              {
-                scaleLabel: {
-                  display: true,
-                  labelString: this.axis.y.labelName,
-                  fontSize: this.fontSize.title,
-                },
-                ticks: {
-                  fontSize: this.fontSize.axis,
-                  suggestedMin: this.axis.y.maxSize,
-                  suggestedMax: this.axis.y.minSize,
-                  stepSize: this.axis.y.stepSize,
-                  // callback: function(value, index, values) {
-                  //   return value + "点";
-                  // },
-                },
-              },
-            ],
-          },
-          horizontalLine: [
-            {
-              y: 0,
-              style: "rgba(0,0,0,1)",
-              text: "tes",
-            },
-          ],
-          tooltips: {
-            mode: "nearest",
-            intersect: true,
-            caretPadding: 30,
-            caretSize: 10,
-            callbacks: {
-              title: (tooltipItem, chart) => {
-                // console.log(
-                //   "tooltipItem",
-                //   tooltipItem,
-                //   chart,
-                //   tooltipItem[0].index
-                // );
+    // createChartVI({ chartName, labelName, setDataArry }) {
+    //   //   console.log(chartName, labelName)
+    //   let chartVI_ctx = window.document
+    //     .getElementById("canvas-" + chartName)
+    //     .getContext("2d");
+    //   let chartData = new Chart(chartVI_ctx, {
+    //     type: this.chartType,
+    //     data: {
+    //       datasets: [
+    //         {
+    //           label: labelName,
+    //           data: setDataArry,
+    //           backgroundColor: this.point.color,
+    //           pointRadius: this.point.size,
+    //           pointHoverRadius: this.point.hoverSize,
+    //           pointHitRadius: this.point.pointHitRadius,
+    //         },
+    //         // {
+    //         //   label: "label2",
+    //         //   data: [
+    //         //     { x: 0, y: 1 },
+    //         //     { x: 0, y: 1 },
+    //         //   ],
+    //         //   backgroundColor: "RGBA(225,95,150, 1)",
+    //         // },
+    //       ],
+    //     },
+    //     options: {
+    //       //   title: {
+    //       //     display: true,
+    //       //     text: "V-I characteristics",
+    //       //     fontSize: this.fontSize.title,
+    //       //   },
+    //       legend: {
+    //         labels: {
+    //           fontSize: this.fontSize.label,
+    //         },
+    //       },
+    //       scales: {
+    //         xAxes: [
+    //           {
+    //             scaleLabel: {
+    //               display: true,
+    //               labelString: this.axis.x.labelName,
+    //               fontSize: this.fontSize.title,
+    //             },
+    //             ticks: {
+    //               fontSize: this.fontSize.axis,
+    //               suggestedMin: this.axis.x.maxSize,
+    //               suggestedMax: this.axis.x.minSize,
+    //               stepSize: this.axis.x.stepSize,
+    //               // callback: function(value, index, values) {
+    //               //   return value + "点";
+    //               // },
+    //             },
+    //           },
+    //         ],
+    //         yAxes: [
+    //           {
+    //             scaleLabel: {
+    //               display: true,
+    //               labelString: this.axis.y.labelName,
+    //               fontSize: this.fontSize.title,
+    //             },
+    //             ticks: {
+    //               fontSize: this.fontSize.axis,
+    //               suggestedMin: this.axis.y.maxSize,
+    //               suggestedMax: this.axis.y.minSize,
+    //               stepSize: this.axis.y.stepSize,
+    //               // callback: function(value, index, values) {
+    //               //   return value + "点";
+    //               // },
+    //             },
+    //           },
+    //         ],
+    //       },
+    //       horizontalLine: [
+    //         {
+    //           y: 0,
+    //           style: "rgba(0,0,0,1)",
+    //           text: "tes",
+    //         },
+    //       ],
+    //       tooltips: {
+    //         mode: "nearest",
+    //         intersect: true,
+    //         caretPadding: 30,
+    //         caretSize: 10,
+    //         callbacks: {
+    //           title: (tooltipItem, chart) => {
+    //             // console.log(
+    //             //   "tooltipItem",
+    //             //   tooltipItem,
+    //             //   chart,
+    //             //   tooltipItem[0].index
+    //             // );
 
-                return tooltipItem[0].index + 1;
-              },
-            },
-          },
-          maintainAspectRatio: true,
-          responsive: true,
-        },
-      });
-      this.currentChart = chartData;
-      this.$store.dispatch("main/setChartList", { chartName, chartData });
-    },
+    //             return tooltipItem[0].index + 1;
+    //           },
+    //         },
+    //       },
+    //       maintainAspectRatio: true,
+    //       responsive: true,
+    //     },
+    //   });
+    //   this.currentChart = chartData;
+    //   this.$store.dispatch("main/setChartList", { chartName, chartData });
+    // },
 
     addChartArryData({ chartName, labelName, setDataArry }) {
       let chartObj = this.chartList[chartName];
@@ -630,41 +684,43 @@ export default {
         chartObj.update();
       }
     },
-    createCanvasElement({ chartName }) {
-      let insertElm = window.document.getElementById(
-        "canvas-wrapper-" + chartName
-      );
-      let isScoped = false;
-      // console.log(chartName.split("-scoped").length, chartName);
-      if (chartName.split("-scoped").length > 1) {
-        isScoped = true;
-      }
-      // console.log("insertElm", insertElm, chartName);
-      //   let newElm = window.document.createElement("div");
-      let newElm = window.document.createElement("canvas");
-      newElm.className = "canvas-chart";
-      newElm.id = "canvas-" + chartName;
-      if (isScoped) {
-        //
-        newElm.style.height = "10%";
-        // newElm.style.height = "50vw";
-        newElm.style.width = "10%";
-        // newElm.style.width = "50vw";
-        // newElm.style.overflow = "hidden";
-      } else {
-        newElm.style.height = "50vh";
-        newElm.style.width = "50vh";
-      }
+    // createCanvasElement({ chartName }) {
+    //   let insertElm = window.document.getElementById(
+    //     "canvas-wrapper-" + chartName
+    //   );
+    //   let isScoped = false;
+    //   // console.log(chartName.split("-scoped").length, chartName);
+    //   if (chartName.split("-scoped").length > 1) {
+    //     isScoped = true;
+    //   }
+    //   // console.log("insertElm", insertElm, chartName);
+    //   //   let newElm = window.document.createElement("div");
+    //   let newElm = window.document.createElement("canvas");
+    //   newElm.className = "canvas-chart";
+    //   newElm.id = "canvas-" + chartName;
+    //   if (isScoped) {
+    //     //
+    //     newElm.style.height = "10%";
+    //     // newElm.style.height = "50vw";
+    //     newElm.style.width = "10%";
+    //     // newElm.style.width = "50vw";
+    //     // newElm.style.overflow = "hidden";
+    //   } else {
+    //     newElm.style.height = "50vh";
+    //     newElm.style.width = "50vh";
+    //   }
 
-      insertElm.appendChild(newElm);
-    },
+    //   insertElm.appendChild(newElm);
+    // },
   },
   watch: {},
   created() {
-    this.initChart();
+    this.initGraph_V_Ip({
+      graphType: this.display.currentDisplayGraphObj.graphType,
+    });
   },
   mounted() {
-    // this.initChart();
+    // this.initGraph_V_Ip();
   },
   components: {
     TableComponent,

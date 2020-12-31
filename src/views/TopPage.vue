@@ -877,9 +877,11 @@ export default {
 
       //出力オブジェクト形成
       let outputObj = {
+        //diff data
         diffData_arry: diff_y_output,
         diffData_scatter: this.data2ScatterData(diff_y_output),
         diffData_leastLineObj: leastLineObj_diff,
+        //isat data
         isatData_arry: calcRange,
         isatData_scatter: this.data2ScatterData(calcRange),
         isatData_leastLineObj: leastLineObj_isat,

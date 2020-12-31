@@ -44,7 +44,6 @@ export default {
       if (chartName.split("-scoped").length > 1) {
         isScoped = true;
       }
-      // console.log("insertElm", insertElm, chartName);
       let newElm = window.document.createElement("canvas");
       newElm.className = "canvas-chart";
       newElm.id = "canvas-" + chartName;
@@ -55,7 +54,8 @@ export default {
         newElm.style.height = "50vh";
         newElm.style.width = "50vh";
       }
-
+      console.log("insertElm", insertElm, chartName, newElm);
+      console.log(JSON.parse(JSON.stringify(this.createChart)));
       insertElm.appendChild(newElm);
     },
     createChartVI({ chartName, labelName, setDataArry, addLineObj }) {
