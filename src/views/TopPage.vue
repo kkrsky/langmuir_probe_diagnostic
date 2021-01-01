@@ -260,6 +260,8 @@ export default {
         switch (currentDisplayGraphObj.graphType) {
           case displayGraphListObj.V_Ip.graphType: {
             //"V-Ip",
+            leastLineObj_origin = file.isatDataObj.isatData_leastLineObj;
+            dataArry = file.isatDataObj.isatData_arry;
             break;
           }
           case displayGraphListObj.V_LogIe.graphType: {
@@ -302,6 +304,23 @@ export default {
         switch (currentDisplayGraphObj.graphType) {
           case displayGraphListObj.V_Ip.graphType: {
             //"V-Ip",
+            let dataArry_isat = file.isatDataObj.isatData_arry;
+            file.isatDataObj.isatData_leastLineObj = leastLineObj_new;
+            file.isatDataObj.diffData_leastLineObj = syncLeastLineObj({
+              originArry: dataArry_isat,
+              from,
+              to,
+            });
+
+            let floatVolt = file.floatVolt;
+            let isatDataObj = file.isatDataObj;
+            let formatTextArry = file.formatText;
+            file.TeObj = this.calcTe({
+              floatVolt,
+              isatDataObj,
+              formatTextArry,
+            });
+
             break;
           }
           case displayGraphListObj.V_LogIe.graphType: {
@@ -329,6 +348,7 @@ export default {
               from,
               to,
             });
+
             break;
           }
           case displayGraphListObj.test.graphType: {
@@ -378,6 +398,7 @@ export default {
             floatVolt,
             formatTextArry,
           });
+          let TeObj = this.calcTe({ floatVolt, isatDataObj, formatTextArry });
 
           // //create chart
           // let addChartObj = {
@@ -410,6 +431,7 @@ export default {
               scatterData: scatterData,
               floatVolt: floatVolt,
               isatDataObj,
+              TeObj,
             };
 
             this.$store.dispatch("main/initChartList", {
@@ -988,6 +1010,11 @@ export default {
         from: leastLineObj_diff.from,
         to: leastLineObj_diff.to,
       });
+      let leastLineObj_isat_VI = this.createLeastSquareMethodLine({
+        originArry: calcRange,
+        from: leastLineObj_diff.from,
+        to: leastLineObj_diff.to,
+      });
 
       //データ保存
 
@@ -1013,6 +1040,52 @@ export default {
 
       // console.log("diffData_leastLineObj", outputObj.diffData_leastLineObj);
       return isatDataObj;
+    },
+    calcTe({ floatVolt, isatDataObj, formatTextArry }) {
+      //Ieを算出
+      // console.log("formatTextArry", formatTextArry);
+      let IiObj = isatDataObj.isatData_leastLineObj;
+      let Ie = formatTextArry.map((dot) => {
+        let [cV, cI] = dot;
+        let Ii = IiObj.a_coord * cV + IiObj.b_coord;
+        let Ie = cI - Ii;
+        return [cV, Ie];
+      });
+      let logIe_arry = Ie.map((dot) => {
+        let [cV, Ie] = dot;
+        let threshold = 5; //Vfー5V~最大値の部分のみ有効
+
+        if (Ie > 0 && cV > floatVolt - threshold) {
+          return [cV, Math.log(Ie)];
+        } else {
+          return [cV, null];
+        }
+        // return [cV, Math.log(Ie)];
+      });
+      //グラフ表示用に規格化
+      let minArry = logIe_arry.reduce((acc, val) => {
+        return acc[1] < val[1] ? acc : val;
+      });
+      minArry = minArry.slice();
+      logIe_arry = logIe_arry.map((dot) => {
+        if (dot[1] !== null) {
+          // console.log(dot[1], Math.abs(minArry[1]));
+
+          dot[1] += Math.abs(minArry[1]);
+          return dot;
+        } else {
+          return dot;
+        }
+      });
+      // console.log("logIe_arry", logIe_arry);
+      // console.log("Ie", Ie);
+
+      //create Object
+      let TeObj = {
+        logIe_arry,
+        logIe_scatter: this.data2ScatterData(logIe_arry),
+      };
+      return TeObj;
     },
 
     ////////////////////////////

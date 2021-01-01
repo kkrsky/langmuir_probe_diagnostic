@@ -314,6 +314,8 @@ export default {
         switch (this.display.currentDisplayGraphObj.graphType) {
           case this.display.displayGraphListObj.V_Ip.graphType: {
             //"V-Ip",
+            return this.$props.file.isatDataObj.isatData_leastLineObj.from;
+
             break;
           }
           case this.display.displayGraphListObj.V_LogIe.graphType: {
@@ -370,6 +372,8 @@ export default {
         switch (this.display.currentDisplayGraphObj.graphType) {
           case this.display.displayGraphListObj.V_Ip.graphType: {
             //"V-Ip",
+            return this.$props.file.isatDataObj.isatData_leastLineObj.to;
+
             break;
           }
           case this.display.displayGraphListObj.V_LogIe.graphType: {
@@ -488,6 +492,8 @@ export default {
           chartName: this.file.name,
           labelName: this.file.name,
           setDataArry: this.file.scatterData,
+          addLineObj: this.file.isatDataObj.isatData_leastLineObj,
+          addGraphDataArry: this.file.TeObj.logIe_scatter,
         },
         setting: {
           fontSize: this.fontSize,
@@ -508,19 +514,19 @@ export default {
     initGraph_V_LogIe({ graphType }) {
       let createChartObj = {
         graphType,
-        // data: {
-        //   file: this.file,
-        //   chartName: this.file.name,
-        //   labelName: this.file.name,
-        //   setDataArry: this.file.isatDataObj.diffData_scatter,
-        //   addLineObj: this.file.isatDataObj.diffData_leastLineObj,
-        // },
-        // setting: {
-        //   fontSize: this.fontSize,
-        //   axis: this.axis,
-        //   point: this.point,
-        //   chartType: this.chartType,
-        // },
+        data: {
+          file: this.file,
+          chartName: "V_LogIe-graph-" + this.file.name,
+          labelName: "V_LogIe-graph-" + this.file.name,
+          setDataArry: this.file.TeObj.logIe_scatter,
+          // addLineObj: this.file.isatDataObj.diffData_leastLineObj,
+        },
+        setting: {
+          fontSize: this.fontSize,
+          axis: this.axis,
+          point: this.point,
+          chartType: this.chartType,
+        },
         reload: 0,
       };
       this.display.currentDisplayGraphObj = createChartObj;
@@ -713,6 +719,17 @@ export default {
         switch (this.display.currentDisplayGraphObj.graphType) {
           case this.display.displayGraphListObj.V_Ip.graphType: {
             //"V-Ip",
+            let lineObj = this.display.currentDisplayGraphObj.data.addLineObj;
+
+            // let lineObj = this.$props.file.isatDataObj.isatData_leastLineObj;
+            let autoObj = this.$props.file.isatDataObj.isatData_fromto_auto;
+
+            lineObj.from = autoObj.from;
+            lineObj.to = autoObj.to;
+            fromVal = autoObj.from;
+            toVal = autoObj.to;
+
+            // return this.$props.file.isatDataObj.isatData_leastLineObj.from;
             break;
           }
           case this.display.displayGraphListObj.V_LogIe.graphType: {

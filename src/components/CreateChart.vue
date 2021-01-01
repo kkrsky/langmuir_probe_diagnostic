@@ -58,7 +58,13 @@ export default {
       // console.log(JSON.parse(JSON.stringify(this.createChart)));
       insertElm.appendChild(newElm);
     },
-    createChartVI({ chartName, labelName, setDataArry, addLineObj }) {
+    createChartVI({
+      chartName,
+      labelName,
+      setDataArry,
+      addLineObj,
+      addGraphDataArry,
+    }) {
       //canvas#"canvas-" + chartNameにグラフを描画
       let datasets = [
         {
@@ -88,7 +94,24 @@ export default {
           borderWidth: 1,
         };
         // console.log(addLine);
-        datasets.push(addDatasetLineObj);
+        datasets.unshift(addDatasetLineObj);
+      }
+      if (addGraphDataArry !== undefined) {
+        let addGraphDataArry_detaset = {
+          label: "log(Ie)",
+          data: addGraphDataArry,
+          backgroundColor: "RGBA(0,255,255, 1)",
+          borderColor: "rgba(0,255,255,1)",
+          pointRadius: 1,
+          // pointStyle: "circle",
+          // pointBackgroundColor: "RGBA(0,0,0, 1)",
+          pointHoverRadius: this.createChart.setting.point.hoverSize,
+          pointHitRadius: this.createChart.setting.point.pointHitRadius,
+          showLine: false,
+          fill: false,
+          // borderWidth: 1,
+        };
+        datasets.unshift(addGraphDataArry_detaset);
       }
       //   console.log(chartName, labelName)
       let chartVI_ctx = window.document
