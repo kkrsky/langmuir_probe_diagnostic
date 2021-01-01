@@ -25,25 +25,57 @@
             <v-container class="setting-start-from-container">
               <v-row>
                 <v-col>
-                  <p>graph: {{ display.currentDisplayGraphObj.graphType }}</p>
-                  <p v-if="currentData.addLineObj">
-                    <!-- {{ file.isatDataObj.diffData_leastLineObj.error.message }} -->
-                    <!-- {{ currentData.addLineObj }} -->
-                    <!-- {{ currentData.addLineObj.error.message }} -->
-                  </p>
+                  <h3>{{ file.name }}</h3>
+                </v-col>
+              </v-row>
+              <v-row>
+                <v-col cols="2">
+                  <v-btn
+                    icon
+                    color="gray"
+                    @click="showNextGraph(-1)"
+                    class="btn-next-graph"
+                  >
+                    <v-icon class="btn-next-graph"
+                      >mdi-arrow-left-bold-circle</v-icon
+                    >
+                  </v-btn></v-col
+                >
+                <v-col cols="2">
+                  <v-btn
+                    icon
+                    color="gray"
+                    @click="showNextGraph(1)"
+                    class="btn-next-graph"
+                  >
+                    <v-icon class="btn-next-graph"
+                      >mdi-arrow-right-bold-circle</v-icon
+                    >
+                  </v-btn>
+                </v-col>
+                <v-col>
+                  <v-select
+                    :items="display.displayGraphList"
+                    :value="display.currentDisplayGraphObj.graphType"
+                    label="表示中のグラフ"
+                    @change="showGraphController($event)"
+                  ></v-select>
+                </v-col>
+                <v-col>
+                  <v-btn @click="testChartContainer()">test</v-btn>
+                </v-col>
+                <v-col>
                   <p v-if="currentData.addLineObj">
                     <!-- {{ file.isatDataObj.diffData_leastLineObj.a_coord }} -->
                     {{ currentData.addLineObj.a_coord }}
                   </p>
-
+                </v-col>
+              </v-row>
+              <!--
+              <v-row>
+                 <v-col>
                   <div class="setting-router-container">
-                    <v-btn icon color="gray" @click="showNextGraph(-1)">
-                      <v-icon>mdi-arrow-left-bold-circle</v-icon>
-                    </v-btn>
-                    <v-btn icon color="gray" @click="showNextGraph(1)">
-                      <v-icon>mdi-arrow-right-bold-circle</v-icon>
-                    </v-btn>
-                    <!-- <v-btn
+                    <v-btn
                       icon
                       color="gray"
                       @click="initDialogGraph({ graphType: 'V-Ip [scoped]' })"
@@ -52,21 +84,17 @@
                       v-on="on"
                     >
                       <v-icon>mdi-arrow-top-right-bottom-left-bold</v-icon>
-                    </v-btn> -->
+                    </v-btn>
                   </div>
-                </v-col>
-                <v-col>
-                  <h3>file: {{ file.name }}</h3>
-                  <v-btn @click="testChartContainer()">test</v-btn>
-                </v-col>
+                </v-col> 
               </v-row>
-
-              <v-row>
+              -->
+              <v-row v-if="display.state.isShowFromTo_Isat">
                 <v-col cols="4">
                   <v-checkbox
-                    @click="onAutoLine"
-                    v-model="isAutoLine"
-                    label="Auto"
+                    @click="onAutoLine_Isat"
+                    v-model="isAutoLine_Isat"
+                    label="Auto Isat"
                   >
                   </v-checkbox>
                 </v-col>
@@ -77,7 +105,7 @@
                     rows="1"
                     v-model.lazy="fromLine"
                     prepend-icon="mdi-ray-start"
-                    :disabled="isAutoLine"
+                    :disabled="isAutoLine_Isat"
                   ></v-textarea>
                 </v-col>
                 <v-col>
@@ -87,7 +115,37 @@
                     rows="1"
                     v-model.lazy="toLine"
                     prepend-icon="mdi-ray-end"
-                    :disabled="isAutoLine"
+                    :disabled="isAutoLine_Isat"
+                  ></v-textarea>
+                </v-col>
+              </v-row>
+              <v-row v-if="display.state.isShowFromTo_Te">
+                <v-col cols="4">
+                  <v-checkbox
+                    @click="onAutoLine_Isat"
+                    v-model="isAutoLine_Isat"
+                    label="Auto Te"
+                  >
+                  </v-checkbox>
+                </v-col>
+                <v-col>
+                  <v-textarea
+                    class="mx-2"
+                    label="from"
+                    rows="1"
+                    v-model.lazy="fromLine"
+                    prepend-icon="mdi-ray-start"
+                    :disabled="isAutoLine_Isat"
+                  ></v-textarea>
+                </v-col>
+                <v-col>
+                  <v-textarea
+                    class="mx-2"
+                    label="to"
+                    rows="1"
+                    v-model.lazy="toLine"
+                    prepend-icon="mdi-ray-end"
+                    :disabled="isAutoLine_Isat"
                   ></v-textarea>
                 </v-col>
               </v-row>
@@ -262,6 +320,7 @@ export default {
           graphType: "V-Ip",
           data: {},
         },
+        displayGraphList: ["V-Ip"], //initDisplayGraphListで自動生成
         displayGraphListObj: {
           V_Ip: { graphType: "V-Ip" },
           V_LogIe: { graphType: "V-Log(Ie)" },
@@ -269,10 +328,14 @@ export default {
           V_Iis: { graphType: "V-Iis" },
           test: { graphType: "test" },
         },
+        state: {
+          isShowFromTo_Isat: false,
+          isShowFromTo_Te: true,
+        },
 
         // displayGraphListObj: ["V-Ip", "V-Log(Ie)", "n-dIis/dVp", "V-Iis", "test"],
       },
-      isAutoLine: true,
+      isAutoLine_Isat: true,
 
       resultObj: {
         Iis_fit: 1,
@@ -552,7 +615,7 @@ export default {
       };
       // this.createChartObj = createChartObj;
       this.display.currentDisplayGraphObj = createChartObj;
-      this.display.displayGraphListObj.test = createChartObj;
+      // this.display.displayGraphListObj.test = createChartObj;
       this.updateChart();
     },
     initGraph_V_Iis({ graphType }) {
@@ -580,99 +643,117 @@ export default {
       //setting
       let createChartObj = {
         graphType,
-        // data: {
-        //   file: this.file,
-        //   chartName: this.file.name,
-        //   labelName: this.file.name,
-        //   setDataArry: this.file.isatDataObj.diffData_scatter,
-        //   addLineObj: this.file.isatDataObj.diffData_leastLineObj,
-        // },
-        // setting: {
-        //   fontSize: this.fontSize,
-        //   axis: this.axis,
-        //   point: this.point,
-        //   chartType: this.chartType,
-        // },
+        data: {
+          file: this.file,
+          chartName: this.file.name,
+          labelName: this.file.name,
+          setDataArry: this.file.isatDataObj.diffData_scatter,
+          addLineObj: this.file.isatDataObj.diffData_leastLineObj,
+        },
+        setting: {
+          fontSize: this.fontSize,
+          axis: this.axis,
+          point: this.point,
+          chartType: this.chartType,
+        },
         reload: 0,
       };
       // this.createChartObj = createChartObj;
       this.display.currentDisplayGraphObj = createChartObj;
-      this.display.displayGraphListObj.test = createChartObj;
+      // this.display.displayGraphListObj.test = createChartObj;
       this.updateChart();
       return createChartObj;
     },
 
     //views
-    showNextGraph(num) {
-      //init
-      let { currentDisplayGraphObj, displayGraphListObj } = this.display;
-      // console.log("current", currentDisplayGraphObj.graphType);
-      //current index
-      let graphKeyArry = Object.keys(displayGraphListObj);
-      let currentName_i = 1;
-      for (const [index, graphKey] of graphKeyArry.entries()) {
-        if (
-          displayGraphListObj[graphKey].graphType ===
-          currentDisplayGraphObj.graphType
-        ) {
-          currentName_i = index;
+    initDisplayGraphList() {
+      let graphKeyArry = Object.keys(this.display.displayGraphListObj);
+      this.display.displayGraphList = graphKeyArry.map((key) => {
+        return this.display.displayGraphListObj[key].graphType;
+      });
+    },
+    resetAllDisplayState() {
+      let stateObj = this.display.state;
+      for (let stateKey in stateObj) {
+        stateObj[stateKey] = false;
+      }
+    },
+    showGraphController(graphType_next) {
+      let {
+        currentDisplayGraphObj,
+        displayGraphListObj,
+        displayGraphList,
+      } = this.display;
+      switch (graphType_next) {
+        case displayGraphListObj.V_Ip.graphType: {
+          this.initGraph_V_Ip({ graphType: graphType_next });
+          // console.log("updated", this.display.currentDisplayGraphObj);
+          this.resetAllDisplayState();
+          this.display.state.isShowFromTo_Te = true;
+
+          break;
+        }
+        case this.display.displayGraphListObj.V_LogIe.graphType: {
+          // "V-Log(Ie)",
+          this.initGraph_V_LogIe({ graphType: graphType_next });
+          this.resetAllDisplayState();
+          this.display.state.isShowFromTo_Te = true;
+
+          break;
+        }
+        case this.display.displayGraphListObj.n_dIisdVp.graphType: {
+          //"n-dIis/dVp",
+          this.initGraph_n_dIisdVp({ graphType: graphType_next });
+          this.resetAllDisplayState();
+          this.display.state.isShowFromTo_Isat = true;
+          break;
+        }
+        case this.display.displayGraphListObj.V_Iis.graphType: {
+          //"V-Iis",
+          this.initGraph_V_Iis({ graphType: graphType_next });
+          this.resetAllDisplayState();
+          this.display.state.isShowFromTo_Isat = true;
+          break;
+        }
+        case displayGraphListObj.test.graphType: {
+          this.initTestGraph({ graphType: graphType_next });
+          this.resetAllDisplayState();
+
           break;
         }
       }
+    },
+    showNextGraph(num) {
+      //init
+      let {
+        currentDisplayGraphObj,
+        displayGraphListObj,
+        displayGraphList,
+      } = this.display;
+      // console.log("current", currentDisplayGraphObj.graphType);
 
-      //next index
-      if (currentName_i + num < 0) currentName_i = graphKeyArry.length;
-      let nextGraphObjKey =
-        graphKeyArry[(currentName_i + num) % graphKeyArry.length];
+      //current index
+      let currentGraphType = currentDisplayGraphObj.graphType;
+      let currentGraph_i = displayGraphList.indexOf(currentGraphType);
+      if (currentGraph_i === -1) currentGraph_i = 0;
+      if (currentGraph_i + num < 0) currentGraph_i = displayGraphList.length;
+      let nextGraph_i = (currentGraph_i + num) % displayGraphList.length;
+      let nextGraphType = displayGraphList[nextGraph_i];
+
+      let displayGraphListObjKeyArry = Object.keys(displayGraphListObj);
+      let nextGraphObjKey = displayGraphListObjKeyArry.find((graphKey) => {
+        return displayGraphListObj[graphKey].graphType === nextGraphType;
+      });
       let nextGraphObj = displayGraphListObj[nextGraphObjKey];
-      // this.display.currentDisplayGraphObj = nextGraphObj;
 
       //初期データ保存
 
       //insert data
       let graphType_next = nextGraphObj.graphType;
 
-      // console.log("next", graphType_next);
-      switch (graphType_next) {
-        case displayGraphListObj.V_Ip.graphType: {
-          this.initGraph_V_Ip({ graphType: graphType_next });
-          // console.log("updated", this.display.currentDisplayGraphObj);
-          break;
-        }
-        case this.display.displayGraphListObj.V_LogIe.graphType: {
-          // "V-Log(Ie)",
-          this.initGraph_V_LogIe({ graphType: graphType_next });
-          break;
-        }
-        case this.display.displayGraphListObj.n_dIisdVp.graphType: {
-          //"n-dIis/dVp",
-          this.initGraph_n_dIisdVp({ graphType: graphType_next });
-
-          break;
-        }
-        case this.display.displayGraphListObj.V_Iis.graphType: {
-          //"V-Iis",
-          this.initGraph_V_Iis({ graphType: graphType_next });
-
-          break;
-        }
-        case displayGraphListObj.test.graphType: {
-          this.initTestGraph({ graphType: graphType_next });
-
-          break;
-        }
-      }
-      // let autoFromToKey =
-      //   "autoFromToKey_" +
-      //   currentDisplayGraphObj.graphType +
-      //   "_" +
-      //   currentDisplayGraphObj.chartName;
-      // if (this.helper.db.isExist(autoFromToKey)) {
-      //   //none
-      // } else {
-      //   this.hepler.db.store(autoFromToKey);
-      // }
+      this.showGraphController(graphType_next);
     },
+
     showScopeGraph() {
       let cpFile = JSON.parse(JSON.stringify(this.file));
       // this.$emit("show-scope-graph", cpFile);
@@ -706,11 +787,9 @@ export default {
     },
 
     //button actions
-    onChangeFromToVal(val) {
-      console.log(val);
-    },
-    onAutoLine() {
-      if (!this.isAutoLine) {
+
+    onAutoLine_Isat() {
+      if (!this.isAutoLine_Isat) {
         //ON->OFF
       } else {
         //OFF->ON
@@ -949,6 +1028,7 @@ export default {
   },
   watch: {},
   created() {
+    this.initDisplayGraphList();
     this.initGraph_V_Ip({
       graphType: this.display.currentDisplayGraphObj.graphType,
     });
@@ -974,6 +1054,11 @@ export default {
     margin: 0;
     padding: 0 !important;
     overflow: scroll;
+  }
+  .btn-next-graph {
+    height: 100%;
+    width: 100%;
+    font-size: 32px;
   }
   .each-chart-grid {
     height: 100%;
@@ -1034,8 +1119,9 @@ export default {
       height: 100%;
       width: 100%;
 
-      .setting-router-container {
+      .setting-start-from-container {
         width: 100%;
+        height: 100%;
       }
     }
   }
