@@ -95,7 +95,7 @@
               <v-row v-if="display.state.isShowFromTo_Isat">
                 <v-col cols="4">
                   <v-checkbox
-                    @click="onAutoLine_Isat"
+                    @click="onAutoLine('Isat')"
                     v-model="isAutoLine_Isat"
                     label="Auto Isat"
                   >
@@ -109,7 +109,16 @@
                     v-model.lazy="fromLine"
                     prepend-icon="mdi-ray-start"
                     :disabled="isAutoLine_Isat"
-                  ></v-textarea>
+                  >
+                    <template v-slot:append-outer>
+                      <v-btn icon color="primary"
+                        ><v-icon @click="fromLine += 1">mdi-plus</v-icon>
+                      </v-btn>
+                      <v-btn icon color="primary"
+                        ><v-icon @click="fromLine -= 1">mdi-minus</v-icon>
+                      </v-btn>
+                    </template>
+                  </v-textarea>
                 </v-col>
                 <v-col>
                   <v-textarea
@@ -119,14 +128,23 @@
                     v-model.lazy="toLine"
                     prepend-icon="mdi-ray-end"
                     :disabled="isAutoLine_Isat"
-                  ></v-textarea>
+                  >
+                    <template v-slot:append-outer>
+                      <v-btn icon color="primary"
+                        ><v-icon @click="toLine += 1">mdi-plus</v-icon>
+                      </v-btn>
+                      <v-btn icon color="primary"
+                        ><v-icon @click="toLine -= 1">mdi-minus</v-icon>
+                      </v-btn>
+                    </template>
+                  </v-textarea>
                 </v-col>
               </v-row>
               <v-row v-if="display.state.isShowFromTo_Te">
                 <v-col cols="4">
                   <v-checkbox
-                    @click="onAutoLine_Isat"
-                    v-model="isAutoLine_Isat"
+                    @click="onAutoLine('Te')"
+                    v-model="isAutoLine_Te"
                     label="Auto Te"
                   >
                   </v-checkbox>
@@ -138,8 +156,17 @@
                     rows="1"
                     v-model.lazy="fromLine"
                     prepend-icon="mdi-ray-start"
-                    :disabled="isAutoLine_Isat"
-                  ></v-textarea>
+                    :disabled="isAutoLine_Te"
+                  >
+                    <template v-slot:append-outer>
+                      <v-btn icon color="primary"
+                        ><v-icon @click="fromLine += 1">mdi-plus</v-icon>
+                      </v-btn>
+                      <v-btn icon color="primary"
+                        ><v-icon @click="fromLine -= 1">mdi-minus</v-icon>
+                      </v-btn>
+                    </template>
+                  </v-textarea>
                 </v-col>
                 <v-col>
                   <v-textarea
@@ -148,8 +175,17 @@
                     rows="1"
                     v-model.lazy="toLine"
                     prepend-icon="mdi-ray-end"
-                    :disabled="isAutoLine_Isat"
-                  ></v-textarea>
+                    :disabled="isAutoLine_Te"
+                  >
+                    <template v-slot:append-outer>
+                      <v-btn icon color="primary"
+                        ><v-icon @click="toLine += 1">mdi-plus</v-icon>
+                      </v-btn>
+                      <v-btn icon color="primary"
+                        ><v-icon @click="toLine -= 1">mdi-minus</v-icon>
+                      </v-btn>
+                    </template>
+                  </v-textarea>
                 </v-col>
               </v-row>
             </v-container>
@@ -235,6 +271,7 @@
 import TableComponent from "./TableComponent";
 import ResultTable from "./ResultTable";
 import CreateChart from "./CreateChart";
+import _template from "../views/_template.vue";
 
 export default {
   props: {
@@ -275,7 +312,7 @@ export default {
       },
       point: {
         size: 1,
-        color: "RGBA(225,95,150, 1)",
+        color: "RGBA(0,0,255, 1)",
         hoverSize: 3,
         pointHitRadius: 2,
       },
@@ -341,6 +378,7 @@ export default {
         // displayGraphListObj: ["V-Ip", "V-Log(Ie)", "Vp-dIp/dVp", "V-Iis", "test"],
       },
       isAutoLine_Isat: true,
+      isAutoLine_Te: true,
 
       resultObj: {
         Iis_fit: 1,
@@ -382,12 +420,14 @@ export default {
         switch (this.display.currentDisplayGraphObj.graphType) {
           case this.display.displayGraphListObj.V_Ip.graphType: {
             //"V-Ip",
-            return this.$props.file.isatDataObj.isatData_leastLineObj.from;
+            return this.$props.file.TeObj.logIe_leastLineObj.from;
 
             break;
           }
           case this.display.displayGraphListObj.V_LogIe.graphType: {
             // "V-Log(Ie)",
+            return this.$props.file.TeObj.logIe_leastLineObj.from;
+
             break;
           }
           case this.display.displayGraphListObj.Vp_dIpdVp.graphType: {
@@ -409,8 +449,51 @@ export default {
         }
       },
       set(fromVal) {
-        let fromOld = this.$props.file.isatDataObj.diffData_leastLineObj.from;
-        let toOld = this.$props.file.isatDataObj.diffData_leastLineObj.to;
+        //short
+        let dgl = this.display.displayGraphListObj;
+        //init
+        let fromOld = null;
+        let toOld = null;
+        let dataLength = null;
+
+        switch (this.display.currentDisplayGraphObj.graphType) {
+          case dgl.V_Ip.graphType: {
+            //"V-Ip",
+            let scope = this.$props.file.TeObj;
+            fromOld = scope.logIe_leastLineObj.from;
+            toOld = scope.logIe_leastLineObj.to;
+            dataLength = scope.logIe_arry.length;
+            break;
+          }
+          case dgl.V_LogIe.graphType: {
+            // "V-Log(Ie)",
+            let scope = this.$props.file.TeObj;
+            fromOld = scope.logIe_leastLineObj.from;
+            toOld = scope.logIe_leastLineObj.to;
+            dataLength = scope.logIe_arry.length;
+            break;
+          }
+          case dgl.Vp_dIpdVp.graphType: {
+            //"Vp-dIp/dVp",
+            fromOld = this.$props.file.isatDataObj.diffData_leastLineObj.from;
+            toOld = this.$props.file.isatDataObj.diffData_leastLineObj.to;
+            dataLength = this.$props.file.isatDataObj.diffData_arry.length;
+            break;
+          }
+          case dgl.V_Iis.graphType: {
+            //"V-Iis",
+            fromOld = this.$props.file.isatDataObj.diffData_leastLineObj.from;
+            toOld = this.$props.file.isatDataObj.diffData_leastLineObj.to;
+            dataLength = this.$props.file.isatDataObj.diffData_arry.length;
+
+            break;
+          }
+          case dgl.test.graphType: {
+            //"test"
+
+            break;
+          }
+        }
         if (isNaN(Number(fromVal))) {
           this.helper.snackFire({ message: "数値を入力してください。" });
           // this.helper.snackFire({ message: "" });
@@ -440,12 +523,14 @@ export default {
         switch (this.display.currentDisplayGraphObj.graphType) {
           case this.display.displayGraphListObj.V_Ip.graphType: {
             //"V-Ip",
-            return this.$props.file.isatDataObj.isatData_leastLineObj.to;
+            return this.$props.file.TeObj.logIe_leastLineObj.to;
 
             break;
           }
           case this.display.displayGraphListObj.V_LogIe.graphType: {
             // "V-Log(Ie)",
+            return this.$props.file.TeObj.logIe_leastLineObj.to;
+
             break;
           }
           case this.display.displayGraphListObj.Vp_dIpdVp.graphType: {
@@ -470,10 +555,53 @@ export default {
         }
       },
       set(toVal) {
-        let fromOld = this.$props.file.isatDataObj.diffData_leastLineObj.from;
-        let toOld = this.$props.file.isatDataObj.diffData_leastLineObj.to;
-        let dataLength = this.$props.file.isatDataObj.diffData_arry.length;
+        //short
+        let dgl = this.display.displayGraphListObj;
+        //init
+        let fromOld = null;
+        let toOld = null;
+        let dataLength = null;
 
+        switch (this.display.currentDisplayGraphObj.graphType) {
+          case dgl.V_Ip.graphType: {
+            //"V-Ip",
+            let scope = this.$props.file.TeObj;
+            fromOld = scope.logIe_leastLineObj.from;
+            toOld = scope.logIe_leastLineObj.to;
+            dataLength = scope.logIe_arry.length;
+            break;
+          }
+          case dgl.V_LogIe.graphType: {
+            // "V-Log(Ie)",
+            let scope = this.$props.file.TeObj;
+            fromOld = scope.logIe_leastLineObj.from;
+            toOld = scope.logIe_leastLineObj.to;
+            dataLength = scope.logIe_arry.length;
+            break;
+          }
+          case dgl.Vp_dIpdVp.graphType: {
+            //"Vp-dIp/dVp",
+            fromOld = this.$props.file.isatDataObj.diffData_leastLineObj.from;
+            toOld = this.$props.file.isatDataObj.diffData_leastLineObj.to;
+            dataLength = this.$props.file.isatDataObj.diffData_arry.length;
+            break;
+          }
+          case dgl.V_Iis.graphType: {
+            //"V-Iis",
+            fromOld = this.$props.file.isatDataObj.diffData_leastLineObj.from;
+            toOld = this.$props.file.isatDataObj.diffData_leastLineObj.to;
+            dataLength = this.$props.file.isatDataObj.diffData_arry.length;
+
+            break;
+          }
+          case dgl.test.graphType: {
+            //"test"
+
+            break;
+          }
+        }
+
+        //check error
         if (isNaN(Number(toVal))) {
           this.helper.snackFire({ message: "数値を入力してください。" });
           toVal = toOld;
@@ -492,6 +620,8 @@ export default {
           });
           toVal = toOld;
         }
+
+        //set new val
         let setObj = {
           changeValue: toVal,
           displayGraphListObj: this.display.displayGraphListObj,
@@ -561,6 +691,7 @@ export default {
           labelName: this.file.name,
           setDataArry: this.file.scatterData,
           addLineObj: this.file.isatDataObj.isatData_leastLineObj,
+          addLineObj_Te: this.file.TeObj.logIe_leastLineObj,
           addGraphDataArry: this.file.TeObj.logIe_scatter,
         },
         setting: {
@@ -587,6 +718,10 @@ export default {
           chartName: "V_LogIe-graph-" + this.file.name,
           labelName: "V_LogIe-graph-" + this.file.name,
           setDataArry: this.file.TeObj.logIe_scatter,
+          // addLineObj: this.file.TeObj.logIe_leastLineObj,
+          addLineObj_Te: this.file.TeObj.logIe_leastLineObj,
+          addGraphDataArry: this.file.TeObj.diffData_scatter,
+
           // addLineObj: this.file.isatDataObj.diffData_leastLineObj,
         },
         setting: {
@@ -650,10 +785,10 @@ export default {
         graphType,
         data: {
           file: this.file,
-          chartName: this.file.name,
-          labelName: this.file.name,
-          setDataArry: this.file.isatDataObj.diffData_scatter,
-          addLineObj: this.file.isatDataObj.diffData_leastLineObj,
+          chartName: "test-" + this.file.name,
+          labelName: "test-" + this.file.name,
+          setDataArry: this.file.TeObj.diffData_scatter,
+          // addLineObj: this.file.isatDataObj.diffData_leastLineObj,
         },
         setting: {
           fontSize: this.fontSize,
@@ -663,10 +798,9 @@ export default {
         },
         reload: 0,
       };
-      // this.createChartObj = createChartObj;
       this.display.currentDisplayGraphObj = createChartObj;
-      // this.display.displayGraphListObj.test = createChartObj;
       this.updateChart();
+
       return createChartObj;
     },
 
@@ -793,83 +927,169 @@ export default {
 
     //button actions
 
-    onAutoLine_Isat() {
-      if (!this.isAutoLine_Isat) {
-        //ON->OFF
-      } else {
-        //OFF->ON
-        let toVal = 0;
-        let fromVal = 0;
-        switch (this.display.currentDisplayGraphObj.graphType) {
-          case this.display.displayGraphListObj.V_Ip.graphType: {
-            //"V-Ip",
-            let lineObj = this.display.currentDisplayGraphObj.data.addLineObj;
+    onAutoLine(target) {
+      switch (target) {
+        case "Isat": {
+          if (!this.isAutoLine_Isat) {
+            //ON->OFF
+          } else {
+            //OFF->ON
+            let toVal = 0;
+            let fromVal = 0;
+            switch (this.display.currentDisplayGraphObj.graphType) {
+              case this.display.displayGraphListObj.V_Ip.graphType: {
+                //"V-Ip",
+                let lineObj = this.display.currentDisplayGraphObj.data
+                  .addLineObj;
 
-            // let lineObj = this.$props.file.isatDataObj.isatData_leastLineObj;
-            let autoObj = this.$props.file.isatDataObj.isatData_fromto_auto;
+                let autoObj = this.$props.file.TeObj.logIe_fromto_auto;
 
-            lineObj.from = autoObj.from;
-            lineObj.to = autoObj.to;
-            fromVal = autoObj.from;
-            toVal = autoObj.to;
+                lineObj.from = autoObj.from;
+                lineObj.to = autoObj.to;
+                fromVal = autoObj.from;
+                toVal = autoObj.to;
 
-            // return this.$props.file.isatDataObj.isatData_leastLineObj.from;
-            break;
+                break;
+              }
+              case this.display.displayGraphListObj.V_LogIe.graphType: {
+                // "V-Log(Ie)",
+                let lineObj = this.display.currentDisplayGraphObj.data
+                  .addLineObj;
+
+                let autoObj = this.$props.file.TeObj.logIe_fromto_auto;
+
+                lineObj.from = autoObj.from;
+                lineObj.to = autoObj.to;
+                fromVal = autoObj.from;
+                toVal = autoObj.to;
+
+                break;
+              }
+              case this.display.displayGraphListObj.Vp_dIpdVp.graphType: {
+                //"Vp-dIp/dVp",
+
+                let lineObj = this.display.currentDisplayGraphObj.data
+                  .addLineObj;
+
+                // let lineObj = this.$props.file.isatDataObj.diffData_leastLineObj;
+                let autoObj = this.$props.file.isatDataObj.isatData_fromto_auto;
+                lineObj.from = autoObj.from;
+                lineObj.to = autoObj.to;
+                fromVal = autoObj.from;
+                toVal = autoObj.to;
+                break;
+              }
+              case this.display.displayGraphListObj.V_Iis.graphType: {
+                //"V-Iis",
+                // console.log(this.display.currentDisplayGraphObj);
+                let lineObj = this.display.currentDisplayGraphObj.data
+                  .addLineObj;
+
+                // let lineObj = this.$props.file.isatDataObj.isatData_leastLineObj;
+                let autoObj = this.$props.file.isatDataObj.isatData_fromto_auto;
+
+                lineObj.from = autoObj.from;
+                lineObj.to = autoObj.to;
+                fromVal = autoObj.from;
+                toVal = autoObj.to;
+
+                // return this.$props.file.isatDataObj.isatData_leastLineObj.from;
+                break;
+              }
+              case this.display.displayGraphListObj.test.graphType: {
+                //"test"
+                // return this.$props.file.isatDataObj.diffData_leastLineObj.from;
+                break;
+              }
+            }
+            let setFromObj = {
+              changeValue: fromVal,
+              displayGraphListObj: this.display.displayGraphListObj,
+              currentDisplayGraphObj: this.display.currentDisplayGraphObj,
+            };
+            let setToObj = {
+              changeValue: toVal,
+              displayGraphListObj: this.display.displayGraphListObj,
+              currentDisplayGraphObj: this.display.currentDisplayGraphObj,
+            };
+            console.log("before", fromVal, toVal);
+            this.$emit("changeTo", setToObj);
+            this.$emit("changeFrom", setFromObj);
+            this.updateChart("hard");
           }
-          case this.display.displayGraphListObj.V_LogIe.graphType: {
-            // "V-Log(Ie)",
-            break;
-          }
-          case this.display.displayGraphListObj.Vp_dIpdVp.graphType: {
-            //"Vp-dIp/dVp",
-
-            let lineObj = this.display.currentDisplayGraphObj.data.addLineObj;
-
-            // let lineObj = this.$props.file.isatDataObj.diffData_leastLineObj;
-            let autoObj = this.$props.file.isatDataObj.isatData_fromto_auto;
-            lineObj.from = autoObj.from;
-            lineObj.to = autoObj.to;
-            fromVal = autoObj.from;
-            toVal = autoObj.to;
-            break;
-          }
-          case this.display.displayGraphListObj.V_Iis.graphType: {
-            //"V-Iis",
-            // console.log(this.display.currentDisplayGraphObj);
-            let lineObj = this.display.currentDisplayGraphObj.data.addLineObj;
-
-            // let lineObj = this.$props.file.isatDataObj.isatData_leastLineObj;
-            let autoObj = this.$props.file.isatDataObj.isatData_fromto_auto;
-
-            lineObj.from = autoObj.from;
-            lineObj.to = autoObj.to;
-            fromVal = autoObj.from;
-            toVal = autoObj.to;
-
-            // return this.$props.file.isatDataObj.isatData_leastLineObj.from;
-            break;
-          }
-          case this.display.displayGraphListObj.test.graphType: {
-            //"test"
-            // return this.$props.file.isatDataObj.diffData_leastLineObj.from;
-            break;
-          }
+          break;
         }
-        let setFromObj = {
-          changeValue: fromVal,
-          displayGraphListObj: this.display.displayGraphListObj,
-          currentDisplayGraphObj: this.display.currentDisplayGraphObj,
-        };
-        let setToObj = {
-          changeValue: toVal,
-          displayGraphListObj: this.display.displayGraphListObj,
-          currentDisplayGraphObj: this.display.currentDisplayGraphObj,
-        };
-        this.$emit("changeTo", setToObj);
-        this.$emit("changeFrom", setFromObj);
-        this.updateChart("hard");
+        case "Te": {
+          if (!this.isAutoLine_Te) {
+            //ON->OFF
+          } else {
+            //OFF->ON
+            let toVal = 0;
+            let fromVal = 0;
+            switch (this.display.currentDisplayGraphObj.graphType) {
+              case this.display.displayGraphListObj.V_Ip.graphType: {
+                //"V-Ip",
+                let lineObj = this.display.currentDisplayGraphObj.data
+                  .addLineObj_Te;
+
+                let autoObj = this.$props.file.TeObj.logIe_fromto_auto;
+
+                lineObj.from = autoObj.from;
+                lineObj.to = autoObj.to;
+                fromVal = autoObj.from;
+                toVal = autoObj.to;
+
+                break;
+              }
+              case this.display.displayGraphListObj.V_LogIe.graphType: {
+                // "V-Log(Ie)",
+                let lineObj = this.display.currentDisplayGraphObj.data
+                  .addLineObj_Te;
+
+                let autoObj = this.$props.file.TeObj.logIe_fromto_auto;
+                lineObj.from = autoObj.from;
+                lineObj.to = autoObj.to;
+                fromVal = autoObj.from;
+                toVal = autoObj.to;
+
+                break;
+              }
+              case this.display.displayGraphListObj.Vp_dIpdVp.graphType: {
+                //"Vp-dIp/dVp",
+
+                break;
+              }
+              case this.display.displayGraphListObj.V_Iis.graphType: {
+                //"V-Iis",
+
+                break;
+              }
+              case this.display.displayGraphListObj.test.graphType: {
+                //"test"
+                // return this.$props.file.isatDataObj.diffData_leastLineObj.from;
+                break;
+              }
+            }
+            let setFromObj = {
+              changeValue: fromVal,
+              displayGraphListObj: this.display.displayGraphListObj,
+              currentDisplayGraphObj: this.display.currentDisplayGraphObj,
+            };
+            let setToObj = {
+              changeValue: toVal,
+              displayGraphListObj: this.display.displayGraphListObj,
+              currentDisplayGraphObj: this.display.currentDisplayGraphObj,
+            };
+            // console.log("before", fromVal, toVal);
+            this.$emit("changeTo", setToObj);
+            this.$emit("changeFrom", setFromObj);
+            this.updateChart("hard");
+          }
+          break;
+        }
       }
     },
+
     //APIs
     //tes2334567
     // createChartVI({ chartName, labelName, setDataArry }) {

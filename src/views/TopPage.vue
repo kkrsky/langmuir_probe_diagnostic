@@ -257,27 +257,45 @@ export default {
         } = changeObj;
         let leastLineObj_origin = null;
         let dataArry = null;
+        let to_Isat = file.isatDataObj.isatData_leastLineObj.to;
+        let from_Isat = file.isatDataObj.isatData_leastLineObj.from;
+        let to_Te = file.TeObj.logIe_leastLineObj.to;
+        let from_Te = file.TeObj.logIe_leastLineObj.from;
+        // console.log("init-Isat", from_Isat, to_Isat);
+        // console.log("init-Te", from_Te, to_Te);
+        //swit
         switch (currentDisplayGraphObj.graphType) {
           case displayGraphListObj.V_Ip.graphType: {
             //"V-Ip",
-            leastLineObj_origin = file.isatDataObj.isatData_leastLineObj;
-            dataArry = file.isatDataObj.isatData_arry;
+            // leastLineObj_origin = file.TeObj.logIe_leastLineObj;
+            // dataArry = file.TeObj.logIe_arry;
+            // to_Te
+            if (typeVal === "from") from_Te = changeValue;
+            if (typeVal === "to") to_Te = changeValue;
             break;
           }
           case displayGraphListObj.V_LogIe.graphType: {
             // "V-Log(Ie)",
+            // leastLineObj_origin = file.TeObj.logIe_leastLineObj;
+            // dataArry = file.TeObj.logIe_arry;
+            if (typeVal === "from") from_Te = changeValue;
+            if (typeVal === "to") to_Te = changeValue;
             break;
           }
           case displayGraphListObj.Vp_dIpdVp.graphType: {
             //"Vp-dIp/dVp",
-            leastLineObj_origin = file.isatDataObj.diffData_leastLineObj;
-            dataArry = file.isatDataObj.diffData_arry;
+            // leastLineObj_origin = file.isatDataObj.diffData_leastLineObj;
+            // dataArry = file.isatDataObj.diffData_arry;
+            if (typeVal === "from") from_Isat = changeValue;
+            if (typeVal === "to") to_Isat = changeValue;
             break;
           }
           case displayGraphListObj.V_Iis.graphType: {
             //"V-Iis",
-            leastLineObj_origin = file.isatDataObj.isatData_leastLineObj;
-            dataArry = file.isatDataObj.isatData_arry;
+            // leastLineObj_origin = file.isatDataObj.isatData_leastLineObj;
+            // dataArry = file.isatDataObj.isatData_arry;
+            if (typeVal === "from") from_Isat = changeValue;
+            if (typeVal === "to") to_Isat = changeValue;
             break;
           }
           case displayGraphListObj.test.graphType: {
@@ -287,68 +305,104 @@ export default {
           }
         }
         //getter
-        let to = leastLineObj_origin.to;
-        let from = leastLineObj_origin.from;
 
         //treat
-        if (typeVal === "from") from = changeValue;
-        if (typeVal === "to") to = changeValue;
 
-        let leastLineObj_new = this.createLeastSquareMethodLine({
-          originArry: dataArry,
-          from,
-          to,
-        });
+        // let leastLineObj_new = this.createLeastSquareMethodLine({
+        //   originArry: dataArry,
+        //   from,
+        //   to,
+        // });
 
         //setter
         switch (currentDisplayGraphObj.graphType) {
           case displayGraphListObj.V_Ip.graphType: {
             //"V-Ip",
-            let dataArry_isat = file.isatDataObj.isatData_arry;
-            file.isatDataObj.isatData_leastLineObj = leastLineObj_new;
-            file.isatDataObj.diffData_leastLineObj = syncLeastLineObj({
-              originArry: dataArry_isat,
-              from,
-              to,
-            });
 
-            let floatVolt = file.floatVolt;
-            let isatDataObj = file.isatDataObj;
-            let formatTextArry = file.formatText;
-            file.TeObj = this.calcTe({
-              floatVolt,
-              isatDataObj,
-              formatTextArry,
+            //set isat
+            // let dataArry_isat = file.isatDataObj.isatData_arry;
+            // let dataArry_diff = file.isatDataObj.diffData_arry;
+            // file.isatDataObj.isatData_leastLineObj = syncLeastLineObj({
+            //   originArry: dataArry_diff,
+            //   from: from_Isat,
+            //   to: to_Isat,
+            // });
+            // file.isatDataObj.diffData_leastLineObj = syncLeastLineObj({
+            //   originArry: dataArry_isat,
+            //   from: from_Isat,
+            //   to: to_Isat,
+            // });
+
+            //recalc te
+            // let floatVolt = file.floatVolt;
+            // let isatDataObj = file.isatDataObj;
+            // let formatTextArry = file.formatText;
+            // file.TeObj = this.calcTe({
+            //   floatVolt,
+            //   isatDataObj,
+            //   formatTextArry,
+            // });
+
+            //rerender te
+
+            //set Te
+            let dataArry_Te = file.TeObj.logIe_arry;
+            file.TeObj.logIe_leastLineObj = syncLeastLineObj({
+              originArry: dataArry_Te,
+              from: from_Te,
+              to: to_Te,
             });
+            // console.log(
+            //   "settted",
+            //   file.TeObj.logIe_leastLineObj.from,
+            //   file.TeObj.logIe_leastLineObj.to
+            // );
 
             break;
           }
           case displayGraphListObj.V_LogIe.graphType: {
             // "V-Log(Ie)",
+            let dataArry_Te = file.TeObj.logIe_arry;
+            file.TeObj.logIe_leastLineObj = syncLeastLineObj({
+              originArry: dataArry_Te,
+              from: from_Te,
+              to: to_Te,
+            });
             break;
           }
           case displayGraphListObj.Vp_dIpdVp.graphType: {
             //"Vp-dIp/dVp",
-            file.isatDataObj.diffData_leastLineObj = leastLineObj_new;
+
             let dataArry_isat = file.isatDataObj.isatData_arry;
+            let dataArry_diff = file.isatDataObj.diffData_arry;
+            file.isatDataObj.diffData_leastLineObj = syncLeastLineObj({
+              originArry: dataArry_diff,
+              from: from_Isat,
+              to: to_Isat,
+            });
             file.isatDataObj.isatData_leastLineObj = syncLeastLineObj({
               originArry: dataArry_isat,
-              from,
-              to,
+              from: from_Isat,
+              to: to_Isat,
             });
 
             break;
           }
           case displayGraphListObj.V_Iis.graphType: {
             //"V-Iis",
-            file.isatDataObj.isatData_leastLineObj = leastLineObj_new;
+            let dataArry_isat = file.isatDataObj.isatData_arry;
             let dataArry_diff = file.isatDataObj.diffData_arry;
+            // console.log("from_Isat", from_Isat, to_Isat);
             file.isatDataObj.diffData_leastLineObj = syncLeastLineObj({
               originArry: dataArry_diff,
-              from,
-              to,
+              from: from_Isat,
+              to: to_Isat,
             });
-
+            file.isatDataObj.isatData_leastLineObj = syncLeastLineObj({
+              originArry: dataArry_isat,
+              from: from_Isat,
+              to: to_Isat,
+            });
             break;
           }
           case displayGraphListObj.test.graphType: {
@@ -726,10 +780,12 @@ export default {
        * @return {Object} [{index:i,data:[cx,diff]},...]
        */
       let item = arry2D.map((dot, i) => {
-        if (i < arry2D.length - 1) {
+        if (dot[1] === null) {
+          let [cx, cy] = dot;
+          return { index: i, data: [cx, cy] };
+        } else if (i < arry2D.length - 1) {
           let [cx, cy] = dot;
           let [nx, ny] = arry2D[i + 1];
-
           //単位xあたりのy増加量
           let diff_y = (ny - cy) / (nx - cx);
           return { index: i, data: [cx, diff_y] };
@@ -1113,10 +1169,112 @@ export default {
       // console.log("logIe_arry", logIe_arry);
       // console.log("Ie", Ie);
 
+      //傾きが最大となる部分を検出する
+      let findGoodTePoint_recur = (obj) => {
+        let _cp = (val) => {
+          return JSON.parse(JSON.stringify(val));
+        };
+        if (obj.endLoop) {
+          return obj.result; //obj.leastLineObj;
+        } else {
+          //init leastLineObj
+
+          //開始位置の微調整
+          if (obj.from === null && obj.floatVolt !== null) {
+            let floatIndex = 0;
+            let nearFloatDot = obj.originArry.slice().reduce((acc, val, i) => {
+              let nearDot = acc[0] - obj.floatVolt;
+              let compDot = val[0] - obj.floatVolt;
+              // console.log(nearDot, compDot);
+              if (Math.abs(nearDot) < Math.abs(compDot)) {
+                return acc;
+              } else {
+                floatIndex = i;
+                return val;
+              }
+            });
+
+            obj.from = floatIndex + 1;
+            obj.to = obj.from + obj.lineLength;
+            obj.cnt = obj.to;
+          }
+
+          if (obj.leastLineObj === null) {
+            obj.leastLineObj = this.createLeastSquareMethodLine({
+              originArry: obj.originArry,
+              from: obj.from,
+              to: obj.to,
+            });
+          }
+
+          //check a_coord
+          if (obj.a_coord_maxObj === null) {
+            obj.a_coord_maxObj = {
+              a: 0,
+              from: obj.from,
+              to: obj.to,
+            };
+          } else {
+            obj.a_coord_maxObj.a > obj.leastLineObj.a_coord
+              ? null
+              : (obj.a_coord_maxObj = {
+                  a: obj.leastLineObj.a_coord,
+                  from: obj.from,
+                  to: obj.to,
+                });
+          }
+          // console.log(obj.leastLineObj.a_coord, obj.a_coord_threshold);
+          if (obj.cnt === obj.originArry.length) {
+            obj.result = this.createLeastSquareMethodLine({
+              originArry: obj.originArry,
+              from: obj.a_coord_maxObj.from,
+              to: obj.a_coord_maxObj.to,
+            });
+            obj.endLoop = true;
+          } else {
+            //fromとtoに1を足して、再度最小二乗法を計算
+            // let { from, to } = obj.leastLineObj;
+            obj.from += 1;
+            obj.to += 1;
+            obj.leastLineObj = this.createLeastSquareMethodLine({
+              originArry: obj.originArry,
+              from: obj.from,
+              to: obj.to,
+            });
+            obj.endLoop = false;
+          }
+          // console.log("obj.endLoop", obj.endLoop);
+          obj.cnt++;
+          return findGoodTePoint_recur(obj);
+        }
+      };
+      let lsmObj = {
+        endLoop: false,
+        result: null,
+        leastLineObj: null,
+        startAverage: null,
+        cnt: 0,
+        a_coord_maxObj: null,
+
+        //set
+        floatVolt,
+        originArry: logIe_arry,
+        lineLength: Math.floor(logIe_arry.length * 0.05), //検証するユニットデータ点数
+        from: null,
+        to: null,
+      };
+      let leastLineObj_Te = findGoodTePoint_recur(lsmObj);
+      let logIe_fromto_auto = {
+        from: leastLineObj_Te.from,
+        to: leastLineObj_Te.to,
+      };
       //create Object
       let TeObj = {
+        //te
         logIe_arry,
         logIe_scatter: this.data2ScatterData(logIe_arry),
+        logIe_leastLineObj: leastLineObj_Te,
+        logIe_fromto_auto: logIe_fromto_auto,
       };
       return TeObj;
     },

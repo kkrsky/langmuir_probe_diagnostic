@@ -63,6 +63,8 @@ export default {
       labelName,
       setDataArry,
       addLineObj,
+      addLineObj_Isat,
+      addLineObj_Te,
       addGraphDataArry,
     }) {
       //canvas#"canvas-" + chartNameにグラフを描画
@@ -77,25 +79,6 @@ export default {
         },
       ];
 
-      if (addLineObj !== undefined) {
-        let addDatasetLineObj = {
-          label: "least square method line",
-          data: addLineObj.lineData_scatter,
-          backgroundColor: "RGBA(255,255,255, 0)",
-          borderColor: "rgba(0,0,0,1)",
-          pointRadius: 2,
-          pointStyle: "circle",
-          // pointBackgroundColor: "RGBA(0,0,0, 1)",
-          pointHoverRadius: this.createChart.setting.point.hoverSize,
-          pointHitRadius: this.createChart.setting.point.pointHitRadius,
-          tension: 0,
-          showLine: true,
-          fill: false,
-          borderWidth: 1,
-        };
-        // console.log(addLine);
-        datasets.unshift(addDatasetLineObj);
-      }
       if (addGraphDataArry !== undefined) {
         let addGraphDataArry_detaset = {
           label: "log(Ie)",
@@ -112,6 +95,63 @@ export default {
           // borderWidth: 1,
         };
         datasets.unshift(addGraphDataArry_detaset);
+      }
+      if (addLineObj !== undefined) {
+        let addDatasetLineObj = {
+          label: "least square method line",
+          data: addLineObj.lineData_scatter,
+          backgroundColor: "RGBA(225,95,150,1)",
+          borderColor: "rgba(225,95,150, 1)",
+          pointRadius: 2,
+          pointStyle: "circle",
+          // pointBackgroundColor: "RGBA(0,0,0, 1)",
+          pointHoverRadius: this.createChart.setting.point.hoverSize,
+          pointHitRadius: this.createChart.setting.point.pointHitRadius,
+          tension: 0,
+          showLine: true,
+          fill: false,
+          borderWidth: 1,
+        };
+        // console.log(addLine);
+        datasets.unshift(addDatasetLineObj);
+      }
+      if (addLineObj_Te !== undefined) {
+        let addDatasetLineObj = {
+          label: "LSM line(Te)",
+          data: addLineObj_Te.lineData_scatter,
+          backgroundColor: "RGBA(255,0,255, 1)",
+          borderColor: "rgba(255,0,255, 1)",
+          pointRadius: 2,
+          pointStyle: "circle",
+          // pointBackgroundColor: "RGBA(0,0,0, 1)",
+          pointHoverRadius: this.createChart.setting.point.hoverSize,
+          pointHitRadius: this.createChart.setting.point.pointHitRadius,
+          tension: 0,
+          showLine: true,
+          fill: false,
+          borderWidth: 1,
+        };
+        // console.log(addLine);
+        datasets.unshift(addDatasetLineObj);
+      }
+      if (addLineObj_Isat !== undefined) {
+        let addDatasetLineObj = {
+          label: "LSM line(Isat)",
+          data: addLineObj_Isat.lineData_scatter,
+          backgroundColor: "RGBA(255,255,255, 0)",
+          borderColor: "rgba(0,0,0,1)",
+          pointRadius: 2,
+          pointStyle: "circle",
+          // pointBackgroundColor: "RGBA(0,0,0, 1)",
+          pointHoverRadius: this.createChart.setting.point.hoverSize,
+          pointHitRadius: this.createChart.setting.point.pointHitRadius,
+          tension: 0,
+          showLine: true,
+          fill: false,
+          borderWidth: 1,
+        };
+        // console.log(addLine);
+        datasets.unshift(addDatasetLineObj);
       }
       //   console.log(chartName, labelName)
       let chartVI_ctx = window.document
@@ -180,6 +220,7 @@ export default {
           },
           maintainAspectRatio: true,
           responsive: true,
+          animation: false,
         },
       });
       this.currentChart = chartData;
