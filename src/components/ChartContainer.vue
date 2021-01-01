@@ -65,9 +65,12 @@
                   <v-btn @click="testChartContainer()">test</v-btn>
                 </v-col>
                 <v-col>
-                  <p v-if="currentData.addLineObj">
-                    <!-- {{ file.isatDataObj.diffData_leastLineObj.a_coord }} -->
-                    {{ currentData.addLineObj.a_coord }}
+                  <p>
+                    <!-- {{ currentData.addLineObj.error.message }} -->
+                    {{ file.isatDataObj.isatData_leastLineObj.error.message }}
+                    <span v-if="currentData.addLineObj">
+                      {{ currentData.addLineObj.a_coord }}
+                    </span>
                   </p>
                 </v-col>
               </v-row>
@@ -306,6 +309,8 @@ export default {
             chartName: null,
             labelName: null,
             setDataArry: null,
+            addLineObj: null,
+            addGraphDataArry: null,
           },
           setting: {
             fontSize: null,
@@ -324,7 +329,7 @@ export default {
         displayGraphListObj: {
           V_Ip: { graphType: "V-Ip" },
           V_LogIe: { graphType: "V-Log(Ie)" },
-          n_dIisdVp: { graphType: "n-dIis/dVp" },
+          Vp_dIpdVp: { graphType: "Vp-dIp/dVp" },
           V_Iis: { graphType: "V-Iis" },
           test: { graphType: "test" },
         },
@@ -333,7 +338,7 @@ export default {
           isShowFromTo_Te: true,
         },
 
-        // displayGraphListObj: ["V-Ip", "V-Log(Ie)", "n-dIis/dVp", "V-Iis", "test"],
+        // displayGraphListObj: ["V-Ip", "V-Log(Ie)", "Vp-dIp/dVp", "V-Iis", "test"],
       },
       isAutoLine_Isat: true,
 
@@ -385,9 +390,9 @@ export default {
             // "V-Log(Ie)",
             break;
           }
-          case this.display.displayGraphListObj.n_dIisdVp.graphType: {
+          case this.display.displayGraphListObj.Vp_dIpdVp.graphType: {
             return this.$props.file.isatDataObj.diffData_leastLineObj.from;
-            //"n-dIis/dVp",
+            //"Vp-dIp/dVp",
             break;
           }
           case this.display.displayGraphListObj.V_Iis.graphType: {
@@ -443,8 +448,8 @@ export default {
             // "V-Log(Ie)",
             break;
           }
-          case this.display.displayGraphListObj.n_dIisdVp.graphType: {
-            //"n-dIis/dVp",
+          case this.display.displayGraphListObj.Vp_dIpdVp.graphType: {
+            //"Vp-dIp/dVp",
             return this.$props.file.isatDataObj.diffData_leastLineObj.to;
 
             break;
@@ -502,7 +507,7 @@ export default {
       // console.log(this.file.isatDataObj);
       // console.log(this.display);
       // console.log("chartList", this.$store.state.main.chartList);
-      this.updateChart();
+      this.updateChart("hard");
       // this.updateChart();
       // this.showNextGraph(0);
       // this.helper.snackFire({ message: "hello" });
@@ -595,13 +600,13 @@ export default {
       this.display.currentDisplayGraphObj = createChartObj;
       this.updateChart();
     },
-    initGraph_n_dIisdVp({ graphType }) {
+    initGraph_Vp_dIpdVp({ graphType }) {
       let createChartObj = {
         graphType,
         data: {
           file: this.file,
-          chartName: "n_dIisdVp-graph-" + this.file.name,
-          labelName: "n_dIisdVp-graph-" + this.file.name,
+          chartName: "Vp_dIpdVp-graph-" + this.file.name,
+          labelName: "Vp_dIpdVp-graph-" + this.file.name,
           setDataArry: this.file.isatDataObj.diffData_scatter,
           addLineObj: this.file.isatDataObj.diffData_leastLineObj,
         },
@@ -701,9 +706,9 @@ export default {
 
           break;
         }
-        case this.display.displayGraphListObj.n_dIisdVp.graphType: {
-          //"n-dIis/dVp",
-          this.initGraph_n_dIisdVp({ graphType: graphType_next });
+        case this.display.displayGraphListObj.Vp_dIpdVp.graphType: {
+          //"Vp-dIp/dVp",
+          this.initGraph_Vp_dIpdVp({ graphType: graphType_next });
           this.resetAllDisplayState();
           this.display.state.isShowFromTo_Isat = true;
           break;
@@ -815,8 +820,8 @@ export default {
             // "V-Log(Ie)",
             break;
           }
-          case this.display.displayGraphListObj.n_dIisdVp.graphType: {
-            //"n-dIis/dVp",
+          case this.display.displayGraphListObj.Vp_dIpdVp.graphType: {
+            //"Vp-dIp/dVp",
 
             let lineObj = this.display.currentDisplayGraphObj.data.addLineObj;
 

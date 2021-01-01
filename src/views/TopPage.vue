@@ -268,8 +268,8 @@ export default {
             // "V-Log(Ie)",
             break;
           }
-          case displayGraphListObj.n_dIisdVp.graphType: {
-            //"n-dIis/dVp",
+          case displayGraphListObj.Vp_dIpdVp.graphType: {
+            //"Vp-dIp/dVp",
             leastLineObj_origin = file.isatDataObj.diffData_leastLineObj;
             dataArry = file.isatDataObj.diffData_arry;
             break;
@@ -327,8 +327,8 @@ export default {
             // "V-Log(Ie)",
             break;
           }
-          case displayGraphListObj.n_dIisdVp.graphType: {
-            //"n-dIis/dVp",
+          case displayGraphListObj.Vp_dIpdVp.graphType: {
+            //"Vp-dIp/dVp",
             file.isatDataObj.diffData_leastLineObj = leastLineObj_new;
             let dataArry_isat = file.isatDataObj.isatData_arry;
             file.isatDataObj.isatData_leastLineObj = syncLeastLineObj({
@@ -723,7 +723,7 @@ export default {
     calcDiff_y(arry2D) {
       /**
        * @param {Array} arry [[x,y],...]
-       * @return {Array} [[i,diff],...]
+       * @return {Object} [{index:i,data:[cx,diff]},...]
        */
       let item = arry2D.map((dot, i) => {
         if (i < arry2D.length - 1) {
@@ -732,7 +732,8 @@ export default {
 
           //単位xあたりのy増加量
           let diff_y = (ny - cy) / (nx - cx);
-          return [i, diff_y];
+          return { index: i, data: [cx, diff_y] };
+          // return [i, diff_y];
         }
       });
       item.pop();
@@ -853,13 +854,13 @@ export default {
       });
 
       //y軸増加分を計算
-      let diff_y = this.calcDiff_y(calcRange);
+      let diffObjArry_y = this.calcDiff_y(calcRange);
 
       //エラー部分を除去 (次の点と比較して今の点が10倍以上異なる場合は除去)
-      let diff_y_output = diff_y.filter((dot, i) => {
-        if (i < diff_y.length - 1) {
-          let [ci, cy] = dot;
-          let [ni, ny] = diff_y[i + 1];
+      let diffObjArry_y_output = diffObjArry_y.filter((dotObj, i) => {
+        if (i < diffObjArry_y.length - 1) {
+          let [cx, cy] = dotObj.data;
+          let [nx, ny] = diffObjArry_y[i + 1].data;
           let threshold = 10;
 
           if (
@@ -876,18 +877,18 @@ export default {
       });
 
       //極端なエラー値を除いたデータの平均算出
-      let calcAveArry = diff_y_output.map((dot) => {
-        return dot[1];
+      let calcAveArry = diffObjArry_y_output.map((dotObj) => {
+        return dotObj.data[1];
       });
       let diffAverage =
         calcAveArry.slice().reduce((acc, val) => {
           return (acc += val);
-        }) / diff_y_output.length;
+        }) / diffObjArry_y_output.length;
       // console.log("diffAverage", diffAverage);
 
       //エラー除去②、平均よりも10倍以上高い場合は除去
-      diff_y_output = diff_y_output.filter((dot, i) => {
-        let [cx, cy] = dot;
+      diffObjArry_y_output = diffObjArry_y_output.filter((dotObj, i) => {
+        let [cx, cy] = dotObj.data;
         let threshold = 10;
         if (
           Math.abs(cy / diffAverage) > threshold ||
@@ -920,13 +921,19 @@ export default {
           return obj.result; //obj.leastLineObj;
         } else {
           //init leastLineObj
-          if (obj.leastLineObj === null) {
+          if (obj.leastLineObj === null && obj.from === null) {
             obj.leastLineObj = this.createLeastSquareMethodLine({
               originArry: obj.originArry,
             });
+          } else if (obj.from !== null && obj.to !== null) {
+            obj.leastLineObj = this.createLeastSquareMethodLine({
+              originArry: obj.originArry,
+              from: obj.from,
+              to: obj.to,
+            });
           }
           //開始位置の微調整
-          if (obj.startAverage === null) {
+          if (obj.startAverage === null && obj.from === null) {
             //開始付近の平均算出
             let threshold = 0.05; //データ総点数の5%を始点付近とする
             // let maxStartIndex = Math.floor(obj.originArry.length * threshold);
@@ -943,23 +950,35 @@ export default {
             // console.log("startDataList", startDataList);
             //スタートポイント算出
             let minVal = 1;
-            let minArry = [];
-            startDataList.forEach((val) => {
-              let diff = Math.abs(val[1] - startAverage);
-              if (val[0] === -1) {
-                //none
-              } else if (minVal > diff) {
+            let minIndex = 0;
+            startDataList.forEach((dot, i) => {
+              let [cx, cy] = dot;
+              let diff = Math.abs(cy - startAverage);
+              if (minVal > diff) {
                 minVal = diff;
-                minArry = val;
+                minIndex = i;
               }
             });
             //setter
             // console.log("min", minArry, "minVal", minVal);
             obj.startAverage = startAverage;
-            obj.leastLineObj.from = minArry[0] + 1; //minArry[0]はindex
+            obj.leastLineObj.from = minIndex + 1; //minArry[0]はindex
           }
 
           //check a_coord
+          if (obj.a_coord_minObj === null) {
+            obj.a_coord_minObj = {
+              a: obj.leastLineObj.a_coord,
+              to: obj.leastLineObj.to,
+            };
+          } else {
+            obj.a_coord_minObj.a < obj.leastLineObj.a_coord
+              ? null
+              : (obj.a_coord_minObj = {
+                  a: obj.leastLineObj.a_coord,
+                  to: obj.leastLineObj.to,
+                });
+          }
           // console.log(obj.leastLineObj.a_coord, obj.a_coord_threshold);
           if (obj.leastLineObj.a_coord < obj.a_coord_threshold) {
             obj.result = obj.leastLineObj;
@@ -972,6 +991,7 @@ export default {
             obj.leastLineObj.error.isSuccess = false;
             obj.leastLineObj.error.message =
               "手動でイオン飽和電流を求めてください";
+            obj.leastLineObj.to = obj.a_coord_minObj.to;
             obj.result = obj.leastLineObj;
             obj.endLoop = true;
           } else {
@@ -990,7 +1010,9 @@ export default {
           return findGoodIsatPoint_recur(obj);
         }
       };
-
+      let diffDataArry_y = diffObjArry_y_output.map((dotObj) => {
+        return dotObj.data;
+      });
       let lsmObj = {
         endLoop: false,
         result: null,
@@ -998,23 +1020,29 @@ export default {
         startAverage: null,
         cnt: 0,
         // originArry: diff_y,
-        originArry: diff_y_output,
+        originArry: diffDataArry_y,
         a_coord_threshold: Number(6 * 1e-5),
+        a_coord_minObj: null,
+        //1回だけ計算してくれる?
+        from: null,
+        to: null,
       };
       let leastLineObj_diff = findGoodIsatPoint_recur(lsmObj);
       // console.log("leastLineObj_diff", leastLineObj_diff);
 
       //表示用イオン飽和電流算出
+      // lsmObj.originArry = calcRange;
+      // lsmObj.from = leastLineObj_diff.from;
+      // lsmObj.to = leastLineObj_diff.to;
+      // findGoodIsatPoint_recur(lsmObj);
       let leastLineObj_isat = this.createLeastSquareMethodLine({
         originArry: calcRange,
         from: leastLineObj_diff.from,
         to: leastLineObj_diff.to,
       });
-      let leastLineObj_isat_VI = this.createLeastSquareMethodLine({
-        originArry: calcRange,
-        from: leastLineObj_diff.from,
-        to: leastLineObj_diff.to,
-      });
+      if (leastLineObj_diff.error.isSuccess === false) {
+        leastLineObj_isat.error = leastLineObj_diff.error;
+      }
 
       //データ保存
 
@@ -1022,14 +1050,19 @@ export default {
         from: leastLineObj_diff.from,
         to: leastLineObj_diff.to,
       };
-
+      // console.log("diffData_fromto_auto", diffData_fromto_auto);
       //出力オブジェクト形成
       let isatDataObj = {
-        //diff data
-        diffData_arry: diff_y_output,
-        diffData_scatter: this.data2ScatterData(diff_y_output),
+        //diff data Vp-dIp/dVp
+        diffData_arry: diffDataArry_y,
+        diffData_scatter: this.data2ScatterData(diffDataArry_y),
         diffData_leastLineObj: leastLineObj_diff,
         diffData_fromto_auto: diffData_fromto_auto,
+        //diff data Vp-dIp/dVp
+        // diffData_arry2: diff_y_output,
+        // diffData_scatter2: this.data2ScatterData(diff_y_output),
+        // diffData_leastLineObj2: leastLineObj_diff,
+        // diffData_fromto_auto2: diffData_fromto_auto,
         //isat data
         isatData_arry: calcRange,
         isatData_scatter: this.data2ScatterData(calcRange),
