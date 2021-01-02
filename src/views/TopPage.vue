@@ -895,6 +895,7 @@ export default {
       return createLeastSquareMethodLine;
     },
     strateLine(leastLineObj, dataArry) {
+      // console.log("dataArry", dataArry);
       let cx = null;
       let cy = null;
       let cx_start = null;
@@ -920,11 +921,17 @@ export default {
       let maxYDot = dataArry.reduce((acc, val) => {
         return acc[1] > val[1] ? acc : val;
       });
+      let minYDot = dataArry.reduce((acc, val) => {
+        return acc[1] < val[1] ? acc : val;
+      });
       // console.log("dataArry", dataArry);
+      let limitDot_start = dataArry.find((dot) => {
+        return dot[1] !== null;
+      });
       let limitDot_end = dataArry.slice(-1)[0];
       // console.log("limit", limitDot_end);
       //計算
-      cy = 0;
+      cy = minYDot[1];
       cx_start = cx_find(cy);
 
       cy = maxYDot[1];
@@ -933,9 +940,10 @@ export default {
 
       //拡張
       cx_start = Math.floor(cx_start - cx_start * adjust);
-      if (limitDot_end[0] < cx_start) cx_start = limitDot_end[0];
+      if (limitDot_start[0] < cx_start) cx_start = limitDot_start[0];
       cy_start = cy_find(cx_start);
 
+      if (limitDot_end[0] < cx_end) cx_end = limitDot_end[0];
       cx_end = Math.floor(cx_end + cx_end * adjust);
       // console.log(limitDot_end[0], cx_end);
       if (limitDot_end[0] < cx_end) cx_end = limitDot_end[0];
