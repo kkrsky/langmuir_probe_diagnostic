@@ -330,7 +330,7 @@ export default {
               rawText: null,
               formatText: null,
               scatterData: null,
-              floatVolt: null,
+              VfObj: null,
               isatDataObj: {
                 //diff data
                 diffData_arry: null,

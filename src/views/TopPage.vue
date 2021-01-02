@@ -387,7 +387,7 @@ export default {
             // });
             //Teデータ更新
             file.TeObj = this.calcTe({
-              floatVolt: file.floatVolt,
+              VfObj: file.VfObj,
               isatDataObj: file.isatDataObj,
               formatTextArry: file.formatText,
             });
@@ -420,7 +420,7 @@ export default {
 
             //Teデータ更新
             file.TeObj = this.calcTe({
-              floatVolt: file.floatVolt,
+              VfObj: file.VfObj,
               isatDataObj: file.isatDataObj,
               formatTextArry: file.formatText,
             });
@@ -467,13 +467,14 @@ export default {
           let rawText = e.target.result;
           let formatTextArry = this.rawTextData2Obj(rawText);
           let scatterData = this.data2ScatterData(formatTextArry);
-          let floatVolt = this.calcFloatVolt(formatTextArry);
+          let VfObj = this.calcVf({ formatTextArry });
           let isatDataObj = this.calcIonSatAct({
             chartName: name,
-            floatVolt,
+            VfObj,
             formatTextArry,
           });
-          let TeObj = this.calcTe({ floatVolt, isatDataObj, formatTextArry });
+          let TeObj = this.calcTe({ VfObj, isatDataObj, formatTextArry });
+          VfObj = this.calcVf({ formatTextArry, TeObj });
           let NeObj = this.calcNe({ isatDataObj, TeObj });
           // //create chart
           // let addChartObj = {
@@ -504,7 +505,7 @@ export default {
               rawText: rawText,
               formatText: formatTextArry,
               scatterData: scatterData,
-              floatVolt: floatVolt,
+              VfObj,
               isatDataObj,
               TeObj,
               NeObj,
@@ -963,15 +964,16 @@ export default {
     },
 
     //action
-    calcFloatVolt(formatText) {
+    calcVf({ formatTextArry, TeObj }) {
       /**
-       * @param {Array} formatText [[0,0],...]
+       * @param {Array} formatTextArry [[0,0],...]
        */
-      let maxLoop = formatText.length;
-      let checkVoltArry = [];
 
+      //VIから浮遊電位を計算
+      let maxLoop = formatTextArry.length;
+      let checkVoltArry = [];
       for (let i = 0; i < maxLoop; i++) {
-        let [cx, cy] = formatText[i];
+        let [cx, cy] = formatTextArry[i];
         let isFirstData = true;
 
         if (cy > 0) {
@@ -982,8 +984,8 @@ export default {
             //これ以降でy軸が負となるデータを検出
             for (let j = i + 1; j < maxLoop; j++) {
               if (j === maxLoop - 1) break;
-              let [nx, ny] = formatText[j];
-              let [nx2, ny2] = formatText[j + 1];
+              let [nx, ny] = formatTextArry[j];
+              let [nx2, ny2] = formatTextArry[j + 1];
 
               if (ny < 0) {
                 checkVoltArry.push([nx, ny]);
@@ -1000,11 +1002,29 @@ export default {
       console.log("checkVoltArry", checkVoltArry);
       let { a, b } = this.leastSquareMethod(checkVoltArry);
       let meanFloatVolt = this.calcLinerPoint({ a, b, y: 0 });
-      return meanFloatVolt;
+
+      //理論計算からVfを算出
+      let Vf_calc = null;
+      if (TeObj) {
+        let mi = this.cons.massAtom;
+        let me = this.cons.me;
+        //単位電子温度[eV]あたりのガス種別浮遊電位
+        let Vf_calc2Te = 1 / 2 + (1 / 2) * Math.log(mi / (2 * Math.PI * me));
+        Vf_calc = Vf_calc2Te * TeObj.Te;
+        console.log("Vf_act", meanFloatVolt.toPrecision(4));
+        console.log("Vf_calc", Vf_calc.toPrecision(4));
+      }
+
+      //create Obj
+      let VfObj = {
+        Vf_act: meanFloatVolt,
+        Vf_calc,
+      };
+      return VfObj;
     },
-    calcIonSatAct({ chartName, floatVolt, formatTextArry }) {
+    calcIonSatAct({ chartName, VfObj, formatTextArry }) {
       let calcRange = formatTextArry.filter((line) => {
-        return line[0] < floatVolt;
+        return line[0] < VfObj.Vf_act;
       });
 
       //y軸増加分を計算
@@ -1218,7 +1238,7 @@ export default {
         let isat = this.calcLinerPoint({
           a: leastLineObj_input.a_coord,
           b: leastLineObj_input.b_coord,
-          x: floatVolt,
+          x: VfObj.Vf_act,
         });
         // console.log("floatVolt", floatVolt, isat);
         console.log("isat", Math.abs(isat));
@@ -1262,9 +1282,10 @@ export default {
       // console.log("diffData_leastLineObj", outputObj.diffData_leastLineObj);
       return isatDataObj;
     },
-    calcTe({ floatVolt, isatDataObj, formatTextArry }) {
+    calcTe({ VfObj, isatDataObj, formatTextArry }) {
       //Ieを算出
       let Te = null;
+      let floatVolt = VfObj.Vf_act;
       // console.log("formatTextArry", formatTextArry);
       let IiObj = isatDataObj.isatData_leastLineObj;
       let Ie = formatTextArry.map((dot) => {
@@ -1462,6 +1483,11 @@ export default {
         ne_isat,
       };
       return NeObj;
+    },
+    calcPlasmaVolt({ VfObj, TeObj }) {
+      //プラズマ電位計算
+      //理論値 Vs=浮遊電位＋シース電位差＋プリシース電位差
+      //二回微分
     },
 
     ////////////////////////////
