@@ -474,7 +474,7 @@ export default {
             formatTextArry,
           });
           let TeObj = this.calcTe({ floatVolt, isatDataObj, formatTextArry });
-
+          let NeObj = this.calcNe({ isatDataObj, TeObj });
           // //create chart
           // let addChartObj = {
           //   chartName: chartName,
@@ -507,6 +507,7 @@ export default {
               floatVolt: floatVolt,
               isatDataObj,
               TeObj,
+              NeObj,
             };
 
             this.$store.dispatch("main/initChartList", {
@@ -1440,6 +1441,27 @@ export default {
         Te,
       };
       return TeObj;
+    },
+    calcNe({ isatDataObj, TeObj }) {
+      //電子密度計算
+      let e = this.cons.e;
+      let area = this.cons.probeArea; //[cm^2]
+      let isat = isatDataObj.isat; //[mA]
+      let kb = this.cons.kb;
+      let te = TeObj.Te; //[eV]
+      let mi = this.cons.massAtom;
+
+      let ne_isat =
+        ((isat * 1e-3) /
+          (Math.exp(1 / 2) * e * area * 1e-4 * Math.sqrt((te * e) / mi))) *
+        1e-6;
+      console.log("ne_isat", ne_isat.toPrecision(3));
+
+      //create obj
+      let NeObj = {
+        ne_isat,
+      };
+      return NeObj;
     },
 
     ////////////////////////////
