@@ -369,6 +369,7 @@ export default {
           V_Ip: { graphType: "V-Ip" },
           V_LogIe: { graphType: "V-Log(Ie)" },
           Vp_dIpdVp: { graphType: "Vp-dIp/dVp" },
+          Vp_ddIp: { graphType: "Vp-ddIp" },
           V_Iis: { graphType: "V-Iis" },
           test: { graphType: "test" },
         },
@@ -437,6 +438,11 @@ export default {
             //"Vp-dIp/dVp",
             break;
           }
+          case this.display.displayGraphListObj.Vp_ddIp.graphType: {
+            // return this.$props.file.VsObj.diffData_leastLineObj.from;
+            //"Vp-dIp/dVp",
+            break;
+          }
           case this.display.displayGraphListObj.V_Iis.graphType: {
             return this.$props.file.isatDataObj.isatData_leastLineObj.from;
             //"V-Iis",
@@ -480,6 +486,11 @@ export default {
             fromOld = this.$props.file.isatDataObj.diffData_leastLineObj.from;
             toOld = this.$props.file.isatDataObj.diffData_leastLineObj.to;
             dataLength = this.$props.file.isatDataObj.diffData_arry.length;
+            break;
+          }
+          case this.display.displayGraphListObj.Vp_ddIp.graphType: {
+            // return this.$props.file.VsObj.diffData_leastLineObj.from;
+            //"Vp-dIp/dVp",
             break;
           }
           case dgl.V_Iis.graphType: {
@@ -541,6 +552,11 @@ export default {
 
             break;
           }
+          case this.display.displayGraphListObj.Vp_ddIp.graphType: {
+            // return this.$props.file.VsObj.diffData_leastLineObj.from;
+            //"Vp-dIp/dVp",
+            break;
+          }
           case this.display.displayGraphListObj.V_Iis.graphType: {
             //"V-Iis",
             return this.$props.file.isatDataObj.isatData_leastLineObj.to;
@@ -586,6 +602,11 @@ export default {
             fromOld = this.$props.file.isatDataObj.diffData_leastLineObj.from;
             toOld = this.$props.file.isatDataObj.diffData_leastLineObj.to;
             dataLength = this.$props.file.isatDataObj.diffData_arry.length;
+            break;
+          }
+          case this.display.displayGraphListObj.Vp_ddIp.graphType: {
+            // return this.$props.file.VsObj.diffData_leastLineObj.from;
+            //"Vp-dIp/dVp",
             break;
           }
           case dgl.V_Iis.graphType: {
@@ -760,6 +781,29 @@ export default {
       // this.display.displayGraphListObj.test = createChartObj;
       this.updateChart();
     },
+    initGraph_Vp_ddIp({ graphType }) {
+      let createChartObj = {
+        graphType,
+        data: {
+          file: this.file,
+          chartName: "Vp_ddIp-graph-" + this.file.name,
+          labelName: "Vp_ddIp-graph-" + this.file.name,
+          setDataArry: this.file.VsObj.diffIp_2nd_scatter,
+          addLineObj: this.file.VsObj.diffData_leastLineObj,
+        },
+        setting: {
+          fontSize: this.fontSize,
+          axis: this.axis,
+          point: this.point,
+          chartType: this.chartType,
+        },
+        reload: 0,
+      };
+      // this.createChartObj = createChartObj;
+      this.display.currentDisplayGraphObj = createChartObj;
+      // this.display.displayGraphListObj.test = createChartObj;
+      this.updateChart();
+    },
     initGraph_V_Iis({ graphType }) {
       let createChartObj = {
         graphType,
@@ -789,7 +833,7 @@ export default {
           file: this.file,
           chartName: "test-" + this.file.name,
           labelName: "test-" + this.file.name,
-          setDataArry: this.file.TeObj.diffData_scatter,
+          setDataArry: this.file.VsObj.diffIp_2nd_scatter,
           // addLineObj: this.file.isatDataObj.diffData_leastLineObj,
         },
         setting: {
@@ -847,6 +891,13 @@ export default {
           this.initGraph_Vp_dIpdVp({ graphType: graphType_next });
           this.resetAllDisplayState();
           this.display.state.isShowFromTo_Isat = true;
+          break;
+        }
+        case this.display.displayGraphListObj.Vp_ddIp.graphType: {
+          // return this.$props.file.VsObj.diffData_leastLineObj.from;
+          //"Vp-ddIp",
+          this.initGraph_Vp_ddIp({ graphType: graphType_next });
+          this.resetAllDisplayState();
           break;
         }
         case this.display.displayGraphListObj.V_Iis.graphType: {
@@ -980,6 +1031,20 @@ export default {
                 toVal = autoObj.to;
                 break;
               }
+              case this.display.displayGraphListObj.Vp_ddIp.graphType: {
+                //"Vp-dIp/dVp",
+
+                // let lineObj = this.display.currentDisplayGraphObj.data
+                //   .addLineObj_Isat;
+
+                // // let lineObj = this.$props.file.isatDataObj.diffData_leastLineObj;
+                // let autoObj = this.$props.file.isatDataObj.isatData_fromto_auto;
+                // lineObj.from = autoObj.from;
+                // lineObj.to = autoObj.to;
+                // fromVal = autoObj.from;
+                // toVal = autoObj.to;
+                break;
+              }
               case this.display.displayGraphListObj.V_Iis.graphType: {
                 //"V-Iis",
                 // console.log(this.display.currentDisplayGraphObj);
@@ -1057,6 +1122,11 @@ export default {
               }
               case this.display.displayGraphListObj.Vp_dIpdVp.graphType: {
                 //"Vp-dIp/dVp",
+
+                break;
+              }
+              case this.display.displayGraphListObj.Vp_ddIp.graphType: {
+                //"Vp_ddIp",
 
                 break;
               }

@@ -300,6 +300,22 @@ export default {
             if (typeVal === "to") to_Isat = changeValue;
             break;
           }
+          case displayGraphListObj.Vp_ddIp.graphType: {
+            //"Vp-dIp/dVp",
+            // leastLineObj_origin = file.isatDataObj.diffData_leastLineObj;
+            // dataArry = file.isatDataObj.diffData_arry;
+            // if (typeVal === "from") from_Isat = changeValue;
+            // if (typeVal === "to") to_Isat = changeValue;
+            break;
+          }
+          case displayGraphListObj.Vp_ddIp.graphType: {
+            //"Vp-dIp/dVp",
+            // leastLineObj_origin = file.isatDataObj.diffData_leastLineObj;
+            // dataArry = file.isatDataObj.diffData_arry;
+            // if (typeVal === "from") from_Isat = changeValue;
+            // if (typeVal === "to") to_Isat = changeValue;
+            break;
+          }
           case displayGraphListObj.V_Iis.graphType: {
             //"V-Iis",
             // leastLineObj_origin = file.isatDataObj.isatData_leastLineObj;
@@ -394,6 +410,9 @@ export default {
 
             break;
           }
+          case displayGraphListObj.Vp_ddIp.graphType: {
+            break;
+          }
           case displayGraphListObj.V_Iis.graphType: {
             //"V-Iis",
             let dataArry_isat = file.isatDataObj.isatData_arry;
@@ -451,15 +470,21 @@ export default {
     ////////////////////////////
     //files
     ////////////////////////////
+    debugStartConsole({ currentFile }) {
+      console.log("--------------------");
+      console.log(currentFile.name);
+    },
     onInputFiles(event) {
       const files = event.target.files;
       let readerArry = [];
 
       for (let i = 0; i < files.length; i++) {
         let currentFile = files[i];
+
         readerArry[i] = new FileReader();
         readerArry[i].onload = (e) => {
           //text format
+          this.debugStartConsole({ currentFile });
           let attribute = "normal"; //normal:通常,scoped:拡大表示
           let chartName = "chartVI";
           let fileName = currentFile.name;
@@ -476,6 +501,7 @@ export default {
           let TeObj = this.calcTe({ VfObj, isatDataObj, formatTextArry });
           VfObj = this.calcVf({ formatTextArry, TeObj });
           let NeObj = this.calcNe({ isatDataObj, TeObj });
+          let VsObj = this.calcVs({ formatTextArry, VfObj, TeObj });
           // //create chart
           // let addChartObj = {
           //   chartName: chartName,
@@ -509,6 +535,7 @@ export default {
               isatDataObj,
               TeObj,
               NeObj,
+              VsObj,
             };
 
             this.$store.dispatch("main/initChartList", {
@@ -830,7 +857,7 @@ export default {
             temp.reduce((acc, val) => {
               return (acc += val);
             }) / dn;
-          output.push([i, ave]);
+          output.push([cx, ave]);
           temp = [];
         } else {
           temp.push(cy);
@@ -1484,10 +1511,73 @@ export default {
       };
       return NeObj;
     },
-    calcPlasmaVolt({ VfObj, TeObj }) {
-      //プラズマ電位計算
-      //理論値 Vs=浮遊電位＋シース電位差＋プリシース電位差
+    calcVs({ formatTextArry, VfObj, TeObj }) {
+      //プラズマ電位(空間電位)計算
       //二回微分
+      let diffIp_1st = this.calcDiff_y(formatTextArry).map((obj) => {
+        return obj.data;
+      });
+      //エラー部分を除去 (次の点と比較して今の点が100倍以上異なる場合は除去)
+      let diffIp_1st_output = diffIp_1st.filter((dot, i) => {
+        if (i < diffIp_1st.length - 1) {
+          let [cx, cy] = dot;
+          let [nx, ny] = diffIp_1st[i + 1];
+          let threshold = 30;
+
+          if (
+            Math.abs(cy / ny) > threshold ||
+            Math.abs(cy / ny) < 1 / threshold
+          ) {
+            return false;
+          } else {
+            return true;
+          }
+        } else {
+          return false;
+        }
+      });
+
+      let diffIp_2nd = this.calcDiff_y(diffIp_1st).map((obj) => {
+        return obj.data;
+      });
+      // diffIp_2nd = this.calcDotAverage(diffIp_2nd, 2);
+      let diffIp_2nd_output = diffIp_2nd.filter((dot, i) => {
+        if (i < diffIp_1st.length - 1) {
+          let [cx, cy] = dot;
+          let [nx, ny] = diffIp_1st[i + 1];
+          let threshold = 30;
+
+          if (
+            Math.abs(cy / ny) > threshold ||
+            Math.abs(cy / ny) < 1 / threshold
+          ) {
+            return false;
+          } else {
+            return true;
+          }
+        } else {
+          return false;
+        }
+      });
+
+      let diffIp_2nd_scatter = this.data2ScatterData(diffIp_2nd_output);
+
+      //理論値 Vs=浮遊電位＋シース電位差＋プリシース電位差
+      //vsi=vf-1/2*log(2*pi*me/(mp*mass))*te+1/2*te;            % 空間電位（浮遊電位＋シース端電位＋プリシース電位）
+      let vf = VfObj.Vf_act;
+      let me = this.cons.me;
+      let mi = this.cons.massAtom;
+      let te = TeObj.Te;
+      let Vs_calc =
+        vf + (1 / 2) * Math.log(mi / (2 * Math.PI * me)) * te + (1 / 2) * te;
+      console.log("[Result] Vs_calc", Vs_calc.toPrecision(4));
+      //create Obj
+      let VsObj = {
+        diffIp_2nd_scatter,
+        diffData_leastLineObj,
+        Vs_calc,
+      };
+      return VsObj;
     },
 
     ////////////////////////////
