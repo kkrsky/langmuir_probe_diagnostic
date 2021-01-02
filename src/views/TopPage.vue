@@ -387,6 +387,13 @@ export default {
               to: to_Isat,
             });
 
+            //Teデータ更新
+            file.TeObj = this.calcTe({
+              floatVolt: file.floatVolt,
+              isatDataObj: file.isatDataObj,
+              formatTextArry: file.formatText,
+            });
+
             break;
           }
           case displayGraphListObj.V_Iis.graphType: {
@@ -403,6 +410,13 @@ export default {
               originArry: dataArry_isat,
               from: from_Isat,
               to: to_Isat,
+            });
+
+            //Teデータ更新
+            file.TeObj = this.calcTe({
+              floatVolt: file.floatVolt,
+              isatDataObj: file.isatDataObj,
+              formatTextArry: file.formatText,
             });
             break;
           }
