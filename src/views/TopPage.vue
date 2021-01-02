@@ -1561,7 +1561,7 @@ export default {
       });
 
       let diffIp_2nd_scatter = this.data2ScatterData(diffIp_2nd_output);
-
+      let diffData_leastLineObj = null;
       //理論値 Vs=浮遊電位＋シース電位差＋プリシース電位差
       //vsi=vf-1/2*log(2*pi*me/(mp*mass))*te+1/2*te;            % 空間電位（浮遊電位＋シース端電位＋プリシース電位）
       let vf = VfObj.Vf_act;

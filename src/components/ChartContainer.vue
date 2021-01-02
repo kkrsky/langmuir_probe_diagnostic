@@ -789,7 +789,7 @@ export default {
           chartName: "Vp_ddIp-graph-" + this.file.name,
           labelName: "Vp_ddIp-graph-" + this.file.name,
           setDataArry: this.file.VsObj.diffIp_2nd_scatter,
-          addLineObj: this.file.VsObj.diffData_leastLineObj,
+          // addLineObj: this.file.VsObj.diffData_leastLineObj,
         },
         setting: {
           fontSize: this.fontSize,
