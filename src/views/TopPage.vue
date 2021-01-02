@@ -999,7 +999,7 @@ export default {
         //初期データ用
         checkVoltArry[0] = [cx, cy];
       }
-      console.log("checkVoltArry", checkVoltArry);
+      // console.log("checkVoltArry", checkVoltArry);
       let { a, b } = this.leastSquareMethod(checkVoltArry);
       let meanFloatVolt = this.calcLinerPoint({ a, b, y: 0 });
 
@@ -1011,8 +1011,8 @@ export default {
         //単位電子温度[eV]あたりのガス種別浮遊電位
         let Vf_calc2Te = 1 / 2 + (1 / 2) * Math.log(mi / (2 * Math.PI * me));
         Vf_calc = Vf_calc2Te * TeObj.Te;
-        console.log("Vf_act", meanFloatVolt.toPrecision(4));
-        console.log("Vf_calc", Vf_calc.toPrecision(4));
+        console.log("[Result] Vf_act", meanFloatVolt.toPrecision(4));
+        console.log("[Result] Vf_calc", Vf_calc.toPrecision(4));
       }
 
       //create Obj
@@ -1241,7 +1241,7 @@ export default {
           x: VfObj.Vf_act,
         });
         // console.log("floatVolt", floatVolt, isat);
-        console.log("isat", Math.abs(isat));
+        console.log("[Result] isat_act", Math.abs(isat).toPrecision(4));
         return Math.abs(isat);
       };
       let func_setLeastLineObj = function(leastLineObj_input) {
@@ -1432,7 +1432,7 @@ export default {
         let a_coord = leastLineObj.a_coord;
         let Te_output = 1 / a_coord;
         // console.log("Te_output", a_coord, Te_output);
-        console.log("Te", Te_output);
+        console.log("[Result] Te_act", Te_output.toPrecision(4));
 
         return Te_output;
       };
@@ -1476,7 +1476,7 @@ export default {
         ((isat * 1e-3) /
           (Math.exp(1 / 2) * e * area * 1e-4 * Math.sqrt((te * e) / mi))) *
         1e-6;
-      console.log("ne_isat", ne_isat.toPrecision(3));
+      console.log("[Result] ne_isat", ne_isat.toPrecision(4));
 
       //create obj
       let NeObj = {
