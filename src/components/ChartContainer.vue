@@ -68,8 +68,8 @@
                   <p>
                     <!-- {{ currentData.addLineObj.error.message }} -->
                     {{ file.isatDataObj.isatData_leastLineObj.error.message }}
-                    <span v-if="currentData.addLineObj">
-                      {{ currentData.addLineObj.a_coord }}
+                    <span v-if="currentData.addLineObj_Isat">
+                      {{ currentData.addLineObj_Isat.a_coord }}
                     </span>
                   </p>
                 </v-col>
@@ -347,6 +347,8 @@ export default {
             labelName: null,
             setDataArry: null,
             addLineObj: null,
+            addLineObj_Isat: null,
+            addLineObj_Te: null,
             addGraphDataArry: null,
           },
           setting: {
@@ -690,7 +692,7 @@ export default {
           chartName: this.file.name,
           labelName: this.file.name,
           setDataArry: this.file.scatterData,
-          addLineObj: this.file.isatDataObj.isatData_leastLineObj,
+          addLineObj_Isat: this.file.isatDataObj.isatData_leastLineObj,
           addLineObj_Te: this.file.TeObj.logIe_leastLineObj,
           addGraphDataArry: this.file.TeObj.logIe_scatter,
         },
@@ -743,7 +745,7 @@ export default {
           chartName: "Vp_dIpdVp-graph-" + this.file.name,
           labelName: "Vp_dIpdVp-graph-" + this.file.name,
           setDataArry: this.file.isatDataObj.diffData_scatter,
-          addLineObj: this.file.isatDataObj.diffData_leastLineObj,
+          addLineObj_Isat: this.file.isatDataObj.diffData_leastLineObj,
         },
         setting: {
           fontSize: this.fontSize,
@@ -766,7 +768,7 @@ export default {
           chartName: "V_Iis-graph" + this.file.name,
           labelName: "V_Iis-graph" + this.file.name,
           setDataArry: this.file.isatDataObj.isatData_scatter,
-          addLineObj: this.file.isatDataObj.isatData_leastLineObj,
+          addLineObj_Isat: this.file.isatDataObj.isatData_leastLineObj,
         },
         setting: {
           fontSize: this.fontSize,
@@ -940,7 +942,7 @@ export default {
               case this.display.displayGraphListObj.V_Ip.graphType: {
                 //"V-Ip",
                 let lineObj = this.display.currentDisplayGraphObj.data
-                  .addLineObj;
+                  .addLineObj_Isat;
 
                 let autoObj = this.$props.file.TeObj.logIe_fromto_auto;
 
@@ -953,8 +955,7 @@ export default {
               }
               case this.display.displayGraphListObj.V_LogIe.graphType: {
                 // "V-Log(Ie)",
-                let lineObj = this.display.currentDisplayGraphObj.data
-                  .addLineObj;
+                let lineObj = this.display.currentDisplayGraphObj.data._Isat;
 
                 let autoObj = this.$props.file.TeObj.logIe_fromto_auto;
 
@@ -969,7 +970,7 @@ export default {
                 //"Vp-dIp/dVp",
 
                 let lineObj = this.display.currentDisplayGraphObj.data
-                  .addLineObj;
+                  .addLineObj_Isat;
 
                 // let lineObj = this.$props.file.isatDataObj.diffData_leastLineObj;
                 let autoObj = this.$props.file.isatDataObj.isatData_fromto_auto;
@@ -983,7 +984,7 @@ export default {
                 //"V-Iis",
                 // console.log(this.display.currentDisplayGraphObj);
                 let lineObj = this.display.currentDisplayGraphObj.data
-                  .addLineObj;
+                  .addLineObj_Isat;
 
                 // let lineObj = this.$props.file.isatDataObj.isatData_leastLineObj;
                 let autoObj = this.$props.file.isatDataObj.isatData_fromto_auto;

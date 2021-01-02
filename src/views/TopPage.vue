@@ -246,6 +246,7 @@ export default {
             originArry: dataArry,
             from,
             to,
+            isExtendLine: true,
           });
         };
         //parser
@@ -813,7 +814,7 @@ export default {
       }
       return output;
     },
-    createLeastSquareMethodLine({ originArry, from, to }) {
+    createLeastSquareMethodLine({ originArry, from, to, isExtendLine }) {
       let from_i = 0;
       let to_i = 0;
       let originArry_edit = this._cp(originArry);
@@ -848,7 +849,9 @@ export default {
       from = from_i + 1;
       to = to_i + 1;
 
-      let outputObj = {
+      //extends
+
+      let createLeastSquareMethodLine = {
         lineData: output,
         lineData_scatter: this.data2ScatterData(output),
         from,
@@ -861,7 +864,71 @@ export default {
         },
       };
 
-      return outputObj;
+      if (isExtendLine === true) {
+        createLeastSquareMethodLine = this.strateLine(
+          createLeastSquareMethodLine,
+          originArry.slice()
+        );
+      }
+      return createLeastSquareMethodLine;
+    },
+    strateLine(leastLineObj, dataArry) {
+      let cx = null;
+      let cy = null;
+      let cx_start = null;
+      let cy_start = null;
+      let cx_end = null;
+      let cy_end = null;
+      let adjust = 0.1; //x％線を伸ばす
+      let cy_find = (cx_in) => {
+        // console.log(leastLineObj.a_coord, leastLineObj.b_coord);
+
+        return leastLineObj.a_coord * cx_in + leastLineObj.b_coord;
+      };
+      let cx_find = (cy_in) => {
+        // console.log(
+        //   "x",
+        //   leastLineObj.a_coord,
+        //   leastLineObj.b_coord,
+        //   (cy_in - leastLineObj.b_coord) / leastLineObj.a_coord
+        // );
+
+        return (cy - leastLineObj.b_coord) / leastLineObj.a_coord;
+      };
+      let maxYDot = dataArry.reduce((acc, val) => {
+        return acc[1] > val[1] ? acc : val;
+      });
+      // console.log("dataArry", dataArry);
+      let limitDot_end = dataArry.slice(-1)[0];
+      // console.log("limit", limitDot_end);
+      //計算
+      cy = 0;
+      cx_start = cx_find(cy);
+
+      cy = maxYDot[1];
+      cx_end = cx_find(cy);
+      // console.log("init", cx_start, cy);
+
+      //拡張
+      cx_start = Math.floor(cx_start - cx_start * adjust);
+      if (limitDot_end[0] < cx_start) cx_start = limitDot_end[0];
+      cy_start = cy_find(cx_start);
+
+      cx_end = Math.floor(cx_end + cx_end * adjust);
+      // console.log(limitDot_end[0], cx_end);
+      if (limitDot_end[0] < cx_end) cx_end = limitDot_end[0];
+      cy_end = cy_find(cx_end);
+      // console.log("start", cx_start, cy_start);
+      // console.log("end", cx_end, cy_end);
+
+      //代入
+      // console.log("final", [cx_end, cy_end]);
+      leastLineObj.lineData.unshift([cx_start, cy_start]);
+      leastLineObj.lineData.push([cx_end, cy_end]);
+      leastLineObj.lineData_scatter = this.data2ScatterData(
+        leastLineObj.lineData
+      );
+      return leastLineObj;
     },
 
     //action
@@ -980,12 +1047,14 @@ export default {
           if (obj.leastLineObj === null && obj.from === null) {
             obj.leastLineObj = this.createLeastSquareMethodLine({
               originArry: obj.originArry,
+              isExtendLine: true,
             });
           } else if (obj.from !== null && obj.to !== null) {
             obj.leastLineObj = this.createLeastSquareMethodLine({
               originArry: obj.originArry,
               from: obj.from,
               to: obj.to,
+              isExtendLine: true,
             });
           }
           //開始位置の微調整
@@ -1058,6 +1127,7 @@ export default {
               originArry: obj.originArry,
               from,
               to,
+              isExtendLine: true,
             });
             obj.endLoop = false;
           }
@@ -1095,6 +1165,7 @@ export default {
         originArry: calcRange,
         from: leastLineObj_diff.from,
         to: leastLineObj_diff.to,
+        isExtendLine: true,
       });
       if (leastLineObj_diff.error.isSuccess === false) {
         leastLineObj_isat.error = leastLineObj_diff.error;
@@ -1204,6 +1275,7 @@ export default {
               originArry: obj.originArry,
               from: obj.from,
               to: obj.to,
+              isExtendLine: true,
             });
           }
 
@@ -1229,6 +1301,7 @@ export default {
               originArry: obj.originArry,
               from: obj.a_coord_maxObj.from,
               to: obj.a_coord_maxObj.to,
+              isExtendLine: true,
             });
             obj.endLoop = true;
           } else {
@@ -1240,6 +1313,7 @@ export default {
               originArry: obj.originArry,
               from: obj.from,
               to: obj.to,
+              isExtendLine: true,
             });
             obj.endLoop = false;
           }
@@ -1264,6 +1338,8 @@ export default {
         to: null,
       };
       let leastLineObj_Te = findGoodTePoint_recur(lsmObj);
+      // leastLineObj_Te = this.strateLine(leastLineObj_Te, logIe_arry);
+
       let logIe_fromto_auto = {
         from: leastLineObj_Te.from,
         to: leastLineObj_Te.to,
