@@ -84,7 +84,7 @@
           <h3>初期条件設定</h3>
           <div class="mt-5"></div>
           <v-text-field
-            v-model="areaOfProbe"
+            v-model="cons.probeArea"
             label="Area of probe [cm^2]"
             outlined
             clearable
@@ -97,7 +97,7 @@
             @change="onChangeGasType"
           ></v-select>
           <v-text-field
-            v-model="gasTypeMassSelect"
+            v-model="cons.massAtom"
             label="Mass of Atom [kg]"
             outlined
             :readonly="!isOtherGasType"
@@ -181,12 +181,10 @@ export default {
       isShowDisplaySetting: true,
       isShowDisplayCalc: true,
       // isShowScopedGraphViewer: false,
-      areaOfProbe: 0.097075213,
       gasType: ["Ar", "H2", "Other"],
-      gasTypeMassSelect: 6.63385357335952 * Math.pow(10, -26),
       gasTypeMassList: [
-        6.63385357335952 * Math.pow(10, -26),
-        1.67355769346049 * Math.pow(10, -27),
+        Number(6.63385357335952 * 1e-26),
+        Number(1.67355769346049 * 1e-27),
       ],
       isOtherGasType: false,
 
@@ -195,6 +193,17 @@ export default {
       ////////////////////////////
       test: {
         // least: null,
+      },
+      cons: {
+        //const
+        e: Number(1.60217733 * 1e-19), //電荷素量[C]
+        kb: Number(1.3806503 * 1e-23), //ボルツマン定数[J/K]
+        me: Number(9.1093897 * 1e-31), //電子の質量[kg]
+        mp: Number(1.6726231 * 1e-27), //陽子の質量[kg](水素陽子)
+        ep0: Number(8.854187817 * 1e-12), //真空の誘電率[F/m]
+        //user setting
+        massAtom: Number(6.63385357335952 * 1e-26), //ガス原子の質量[kg] ,初期設定はAr
+        probeArea: Number(0.097075213), //プローブ表面積[cm^2]
       },
     };
   },
@@ -315,44 +324,20 @@ export default {
         //   to,
         // });
 
-        //setter
+        //setter,ここでGUIで変更したfrom,toの値を再計算している
         switch (currentDisplayGraphObj.graphType) {
           case displayGraphListObj.V_Ip.graphType: {
             //"V-Ip",
 
-            //set isat
-            // let dataArry_isat = file.isatDataObj.isatData_arry;
-            // let dataArry_diff = file.isatDataObj.diffData_arry;
-            // file.isatDataObj.isatData_leastLineObj = syncLeastLineObj({
-            //   originArry: dataArry_diff,
-            //   from: from_Isat,
-            //   to: to_Isat,
-            // });
-            // file.isatDataObj.diffData_leastLineObj = syncLeastLineObj({
-            //   originArry: dataArry_isat,
-            //   from: from_Isat,
-            //   to: to_Isat,
-            // });
-
-            //recalc te
-            // let floatVolt = file.floatVolt;
-            // let isatDataObj = file.isatDataObj;
-            // let formatTextArry = file.formatText;
-            // file.TeObj = this.calcTe({
-            //   floatVolt,
-            //   isatDataObj,
-            //   formatTextArry,
-            // });
-
-            //rerender te
-
             //set Te
             let dataArry_Te = file.TeObj.logIe_arry;
-            file.TeObj.logIe_leastLineObj = syncLeastLineObj({
+            let leastLineObj_new = syncLeastLineObj({
               originArry: dataArry_Te,
               from: from_Te,
               to: to_Te,
             });
+            file.TeObj.func_setLeastLineObj(leastLineObj_new);
+            // file.TeObj.logIe_leastLineObj =
             // console.log(
             //   "settted",
             //   file.TeObj.logIe_leastLineObj.from,
@@ -364,11 +349,17 @@ export default {
           case displayGraphListObj.V_LogIe.graphType: {
             // "V-Log(Ie)",
             let dataArry_Te = file.TeObj.logIe_arry;
-            file.TeObj.logIe_leastLineObj = syncLeastLineObj({
+            let leastLineObj_new = syncLeastLineObj({
               originArry: dataArry_Te,
               from: from_Te,
               to: to_Te,
             });
+            file.TeObj.func_setLeastLineObj(leastLineObj_new);
+            // file.TeObj.logIe_leastLineObj = syncLeastLineObj({
+            //   originArry: dataArry_Te,
+            //   from: from_Te,
+            //   to: to_Te,
+            // });
             break;
           }
           case displayGraphListObj.Vp_dIpdVp.graphType: {
@@ -376,17 +367,24 @@ export default {
 
             let dataArry_isat = file.isatDataObj.isatData_arry;
             let dataArry_diff = file.isatDataObj.diffData_arry;
-            file.isatDataObj.diffData_leastLineObj = syncLeastLineObj({
-              originArry: dataArry_diff,
-              from: from_Isat,
-              to: to_Isat,
-            });
-            file.isatDataObj.isatData_leastLineObj = syncLeastLineObj({
+
+            let leastLineObj_new = syncLeastLineObj({
               originArry: dataArry_isat,
               from: from_Isat,
               to: to_Isat,
             });
+            file.isatDataObj.func_setLeastLineObj(leastLineObj_new);
 
+            // file.isatDataObj.diffData_leastLineObj = syncLeastLineObj({
+            //   originArry: dataArry_diff,
+            //   from: from_Isat,
+            //   to: to_Isat,
+            // });
+            // file.isatDataObj.isatData_leastLineObj =syncLeastLineObj({
+            //   originArry: dataArry_isat,
+            //   from: from_Isat,
+            //   to: to_Isat,
+            // });
             //Teデータ更新
             file.TeObj = this.calcTe({
               floatVolt: file.floatVolt,
@@ -401,16 +399,24 @@ export default {
             let dataArry_isat = file.isatDataObj.isatData_arry;
             let dataArry_diff = file.isatDataObj.diffData_arry;
             // console.log("from_Isat", from_Isat, to_Isat);
-            file.isatDataObj.diffData_leastLineObj = syncLeastLineObj({
-              originArry: dataArry_diff,
-              from: from_Isat,
-              to: to_Isat,
-            });
-            file.isatDataObj.isatData_leastLineObj = syncLeastLineObj({
+
+            let leastLineObj_new = syncLeastLineObj({
               originArry: dataArry_isat,
               from: from_Isat,
               to: to_Isat,
             });
+            file.isatDataObj.func_setLeastLineObj(leastLineObj_new);
+
+            // file.isatDataObj.diffData_leastLineObj = syncLeastLineObj({
+            //   originArry: dataArry_diff,
+            //   from: from_Isat,
+            //   to: to_Isat,
+            // });
+            // file.isatDataObj.isatData_leastLineObj = syncLeastLineObj({
+            //   originArry: dataArry_isat,
+            //   from: from_Isat,
+            //   to: to_Isat,
+            // });
 
             //Teデータ更新
             file.TeObj = this.calcTe({
@@ -733,15 +739,17 @@ export default {
       // console.log("selectVal:", selectVal);
       if (selectVal === "Other") {
         this.isOtherGasType = true;
+        this.cons.massAtom = Number(1e-26);
       } else {
         this.isOtherGasType = false;
         switch (selectVal) {
           case "Ar": {
-            this.gasTypeMassSelect = this.gasTypeMassList[0];
+            this.cons.massAtom = this.gasTypeMassList[0];
+
             break;
           }
           case "H2": {
-            this.gasTypeMassSelect = this.gasTypeMassList[1];
+            this.cons.massAtom = this.gasTypeMassList[1];
             break;
           }
           default: {
@@ -1193,6 +1201,35 @@ export default {
       };
       // console.log("diffData_fromto_auto", diffData_fromto_auto);
       //出力オブジェクト形成
+
+      let calcIsat_realTime = (leastLineObj_input) => {
+        //浮遊電位でのイオン飽和電流
+        //プローブ電位がプラズマ電位になると、シースがなくなるので、正しい電子飽和電流とイオン飽和電流が流れるはず
+        //現状、正しくプラズマ電位を求めることができていないので、とりあえず浮遊電位で計算
+        let isat = this.calcLinerPoint({
+          a: leastLineObj_input.a_coord,
+          b: leastLineObj_input.b_coord,
+          x: floatVolt,
+        });
+        // console.log("floatVolt", floatVolt, isat);
+        console.log("isat", Math.abs(isat));
+        return Math.abs(isat);
+      };
+      let func_setLeastLineObj = function(leastLineObj_input) {
+        /**
+         * //this->TeObj
+          // console.log(this);
+         * from,toの値をGUIで変更した際に再計算するために呼び出される
+         *
+         */
+
+        //変更を更新
+        this.isatData_leastLineObj = leastLineObj_input;
+        this.diffData_leastLineObj = leastLineObj_input;
+        this.isat = calcIsat_realTime(leastLineObj_input);
+      };
+
+      //create obj
       let isatDataObj = {
         //diff data Vp-dIp/dVp
         diffData_arry: diffDataArry_y,
@@ -1209,7 +1246,8 @@ export default {
         isatData_scatter: this.data2ScatterData(calcRange),
         isatData_leastLineObj: leastLineObj_isat,
         isatData_fromto_auto: diffData_fromto_auto,
-        isat: null,
+        func_setLeastLineObj: func_setLeastLineObj, //function
+        isat: calcIsat_realTime(leastLineObj_isat),
       };
 
       // console.log("diffData_leastLineObj", outputObj.diffData_leastLineObj);
@@ -1217,6 +1255,7 @@ export default {
     },
     calcTe({ floatVolt, isatDataObj, formatTextArry }) {
       //Ieを算出
+      let Te = null;
       // console.log("formatTextArry", formatTextArry);
       let IiObj = isatDataObj.isatData_leastLineObj;
       let Ie = formatTextArry.map((dot) => {
@@ -1358,6 +1397,30 @@ export default {
         from: leastLineObj_Te.from,
         to: leastLineObj_Te.to,
       };
+
+      let calcTe_realTime = (leastLineObj) => {
+        let a_coord = leastLineObj.a_coord;
+        let Te_output = 1 / a_coord;
+        // console.log("Te_output", a_coord, Te_output);
+        console.log("Te", Te_output);
+
+        return Te_output;
+      };
+
+      Te = calcTe_realTime(leastLineObj_Te);
+
+      let func_setLeastLineObj = function(leastLineObj_input) {
+        /**
+         * //this->TeObj
+          // console.log(this);
+         * from,toの値をGUIで変更した際に再計算するために呼び出される
+         *
+         */
+
+        //変更を更新
+        this.logIe_leastLineObj = leastLineObj_input;
+        this.Te = calcTe_realTime(leastLineObj_input);
+      };
       //create Object
       let TeObj = {
         //te
@@ -1365,6 +1428,8 @@ export default {
         logIe_scatter: this.data2ScatterData(logIe_arry),
         logIe_leastLineObj: leastLineObj_Te,
         logIe_fromto_auto: logIe_fromto_auto,
+        func_setLeastLineObj: func_setLeastLineObj, //function
+        Te,
       };
       return TeObj;
     },
