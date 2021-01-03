@@ -4,9 +4,7 @@
       <!-- v-show="isShowDrower"-->
       <v-list-item>
         <v-list-item-content>
-          <v-list-item-title class="title">
-            Calculator
-          </v-list-item-title>
+          <v-list-item-title class="title"> Calculator </v-list-item-title>
           <v-list-item-subtitle>
             Langmuir probe diagnostic
           </v-list-item-subtitle>
@@ -93,7 +91,7 @@
                       @change="onInputFiles"
                       multiple
                       accept="text/plain,text/csv"
-                      style="display:none"
+                      style="display: none"
                     />
                   </label>
                 </v-btn>
@@ -1539,7 +1537,7 @@ export default {
         console.log("[Result] isat_act", Math.abs(isat).toPrecision(4));
         return Math.abs(isat);
       };
-      let func_setLeastLineObj = function(leastLineObj_input) {
+      let func_setLeastLineObj = function (leastLineObj_input) {
         /**
          * //this->TeObj
           // console.log(this);
@@ -1734,7 +1732,7 @@ export default {
 
       Te = calcTe_realTime(leastLineObj_Te);
 
-      let func_setLeastLineObj = function(leastLineObj_input) {
+      let func_setLeastLineObj = function (leastLineObj_input) {
         /**
          * //this->TeObj
           // console.log(this);
@@ -1769,9 +1767,17 @@ export default {
 
       let ne_isat =
         ((isat * 1e-3) /
-          (Math.exp(1 / 2) * e * area * 1e-4 * Math.sqrt((te * e) / mi))) *
+          (Math.exp(-1 / 2) * e * area * 1e-4 * Math.sqrt((te * e) / mi))) *
         1e-6;
+      //NE=(((Io*1E-3)/(PROS))*(1/(0.6*E))*pow((MI/(TE*E)),0.5))*1E-6;
+      // let ne_test =
+      //   ((isat * 1e-3) / (area * 1e-4)) *
+      //   (1 / (0.6 * e)) *
+      //   Math.pow(mi / (te * e), 0.5) *
+      //   1e-6;
+
       console.log("[Result] ne_isat", ne_isat.toPrecision(4));
+      // console.log("[Result] ne_test", ne_test.toPrecision(4));
 
       //create obj
       let NeObj = {
