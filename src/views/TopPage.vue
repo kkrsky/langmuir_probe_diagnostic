@@ -269,6 +269,7 @@ export default {
         //user setting
         massAtom: Number(6.63385357335952 * 1e-26), //ガス原子の質量[kg] ,初期設定はAr
         probeArea: Number(0.097075213), //プローブ表面積[cm^2]
+        currentGas: "Ar",
       },
     };
   },
@@ -872,6 +873,7 @@ export default {
         { key: "VfObj.Vf_calc", label: "Vf_calc[V]" },
         { key: "VsObj.Vs_calc", label: "Vs_calc[V]" },
         { key: "isatDataObj.isat", label: "isat[mA]" },
+        { key: "isatDataObj.Jsat", label: "Jsat[mA/cm^2]" },
         { key: "isatDataObj.isatData_leastLineObj.from", label: "isat_from" },
         { key: "isatDataObj.isatData_leastLineObj.to", label: "isat_to" },
         { key: "debyLength", label: "debyLength[mm]" },
@@ -881,6 +883,18 @@ export default {
       //outputFileにデータを格納
       pickedArry.forEach((pickObj) => {
         let { key, label, data } = pickObj;
+        outputFile[label] = data;
+      });
+
+      //その他環境情報を保存
+      let envArry = [
+        { label: "probeArea[cm^2]", data: this.cons.probeArea },
+        { label: "gasType", data: this.cons.currentGas },
+        { label: "massAtom", data: this.cons.massAtom },
+      ];
+
+      envArry.forEach((pickObj) => {
+        let { label, data } = pickObj;
         outputFile[label] = data;
       });
 
@@ -1032,6 +1046,7 @@ export default {
     ////////////////////////////
     onChangeGasType(selectVal) {
       // console.log("selectVal:", selectVal);
+      this.cons.currentGas = selectVal;
       if (selectVal === "Other") {
         this.isOtherGasType = true;
         this.cons.massAtom = Number(1e-26);
@@ -1537,6 +1552,7 @@ export default {
         console.log("[Result] isat_act", Math.abs(isat).toPrecision(4));
         return Math.abs(isat);
       };
+      let that = this;
       let func_setLeastLineObj = function (leastLineObj_input) {
         /**
          * //this->TeObj
@@ -1544,11 +1560,12 @@ export default {
          * from,toの値をGUIで変更した際に再計算するために呼び出される
          *
          */
-
+        let area = that.cons.probeArea;
         //変更を更新
         this.isatData_leastLineObj = leastLineObj_input;
         this.diffData_leastLineObj = leastLineObj_input;
         this.isat = calcIsat_realTime(leastLineObj_input);
+        this.Jsat = this.isat / area;
       };
 
       //create obj
@@ -1570,6 +1587,7 @@ export default {
         isatData_fromto_auto: diffData_fromto_auto,
         func_setLeastLineObj: func_setLeastLineObj, //function
         isat: calcIsat_realTime(leastLineObj_isat),
+        Jsat: calcIsat_realTime(leastLineObj_isat) / this.cons.probeArea,
       };
 
       // console.log("diffData_leastLineObj", outputObj.diffData_leastLineObj);
