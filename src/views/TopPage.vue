@@ -581,12 +581,14 @@ export default {
           let isSame = isSameFile(currentFile.name);
           if (isSame) {
             //同じファイルが挿入されているのでスキップ
-            this.snackFire({
-              message:
-                "既に同じ名前のファイルが存在します。[" +
-                currentFile.name +
-                "]",
-            });
+            let msg =
+              "既に同じ名前のファイルが存在するため、保存しません。[" +
+              currentFile.name +
+              "]";
+            // this.snackFire({
+            //   message: msg,
+            // });
+            window.alert(msg);
             if (readFileEnd) {
               //最後のファイルが読み込まれた
               this.loadingHandler({ type: "end" });
