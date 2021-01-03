@@ -557,7 +557,18 @@ export default {
     onInputFiles(event) {
       const files = event.target.files;
       let readerArry = [];
-      this.loadingHandler({ type: "start", message: "ファイル読み込み中..." });
+      if (files.length !== 0) {
+        this.loadingHandler({
+          type: "start",
+          message: "ファイル読み込み中...",
+        });
+      }
+      let isSameFile = (fileName) => {
+        let isSame = this.files.find((file) => {
+          return file.fileName === fileName;
+        });
+        return Boolean(isSame);
+      };
 
       for (let i = 0; i < files.length; i++) {
         let currentFile = files[i];
@@ -567,74 +578,92 @@ export default {
         let readFileEnd = readerArry[files.length - 1];
         readerArry[i].onload = (e, i) => {
           //text format
-          this.debugStartConsole({ currentFile });
-          let attribute = "normal"; //normal:通常,scoped:拡大表示
-          let chartName = "chartVI";
-          let fileName = currentFile.name;
-          let name = fileName.split(".txt").shift();
-          let rawText = e.target.result;
-          let formatTextArry = this.rawTextData2Obj(rawText);
-          let scatterData = this.data2ScatterData(formatTextArry);
-          let VfObj = this.calcVf({ formatTextArry });
-          let isatDataObj = this.calcIonSatAct({
-            chartName: name,
-            VfObj,
-            formatTextArry,
-          });
-          let TeObj = this.calcTe({ VfObj, isatDataObj, formatTextArry });
-          VfObj = this.calcVf({ formatTextArry, TeObj });
-          let NeObj = this.calcNe({ isatDataObj, TeObj });
-          let VsObj = this.calcVs({ formatTextArry, VfObj, TeObj });
-          // //create chart
-          // let addChartObj = {
-          //   chartName: chartName,
-          //   labelName: name,
-          //   setDataArry: scatterData,
-          // };
-
-          // this.createChartVI(addChartObj);
-          // this.addChartArryData(addChartObj);
-
-          //create file obj
-          if (formatTextArry.length !== 0) {
-            let id = null;
-            if (this.files.length === 0) {
-              id = 1;
-            } else {
-              let maxIdObj = this.files.reduce((acc, val) => {
-                return acc.id > val.id ? acc : val;
-              });
-              id = maxIdObj.id + 1;
-            }
-            let file = {
-              id: id,
-              attribute: attribute,
-              name: name,
-              fileName: fileName,
-              rawText: rawText,
-              formatText: formatTextArry,
-              scatterData: scatterData,
-              VfObj,
-              isatDataObj,
-              TeObj,
-              NeObj,
-              VsObj,
-            };
-
-            this.$store.dispatch("main/initChartList", {
-              chartName: name,
-              file,
+          let isSame = isSameFile(currentFile.name);
+          if (isSame) {
+            //同じファイルが挿入されているのでスキップ
+            this.snackFire({
+              message:
+                "既に同じ名前のファイルが存在します。[" +
+                currentFile.name +
+                "]",
             });
-            this.files.push(file);
             if (readFileEnd) {
               //最後のファイルが読み込まれた
               this.loadingHandler({ type: "end" });
             }
           } else {
-            window.alert(
-              "正しいデータフォーマットのファイルを入力してください。:" +
-                fileName
-            );
+            this.debugStartConsole({ currentFile });
+            let attribute = "normal"; //normal:通常,scoped:拡大表示
+            let chartName = "chartVI";
+            let fileName = currentFile.name;
+            let name = fileName.split(".txt").shift();
+            let rawText = e.target.result;
+            let formatTextArry = this.rawTextData2Obj(rawText);
+            let scatterData = this.data2ScatterData(formatTextArry);
+            let VfObj = this.calcVf({ formatTextArry });
+            let isatDataObj = this.calcIonSatAct({
+              chartName: name,
+              VfObj,
+              formatTextArry,
+            });
+            let TeObj = this.calcTe({ VfObj, isatDataObj, formatTextArry });
+            VfObj = this.calcVf({ formatTextArry, TeObj });
+            let NeObj = this.calcNe({ isatDataObj, TeObj });
+            let VsObj = this.calcVs({ formatTextArry, VfObj, TeObj });
+            // //create chart
+            // let addChartObj = {
+            //   chartName: chartName,
+            //   labelName: name,
+            //   setDataArry: scatterData,
+            // };
+
+            // this.createChartVI(addChartObj);
+            // this.addChartArryData(addChartObj);
+
+            //create file obj
+            if (formatTextArry.length !== 0) {
+              let id = null;
+              if (this.files.length === 0) {
+                id = 1;
+              } else {
+                let maxIdObj = this.files.reduce((acc, val) => {
+                  return acc.id > val.id ? acc : val;
+                });
+                id = maxIdObj.id + 1;
+              }
+              let file = {
+                id: id,
+                attribute: attribute,
+                name: name,
+                fileName: fileName,
+                rawText: rawText,
+                formatText: formatTextArry,
+                scatterData: scatterData,
+                VfObj,
+                isatDataObj,
+                TeObj,
+                NeObj,
+                VsObj,
+              };
+
+              this.$store.dispatch("main/initChartList", {
+                chartName: name,
+                file,
+              });
+              this.files.push(file);
+
+              if (readFileEnd) {
+                //最後のファイルが読み込まれた
+                this.loadingHandler({ type: "end" });
+              }
+            } else {
+              this.helper.snackFire({
+                message:
+                  "データフォーマットを調整する必要があります。正しいデータフォーマットのファイルを入力してください。:" +
+                  fileName,
+              });
+              // window.alert();
+            }
           }
         };
         readerArry[i].readAsText(currentFile);
@@ -738,6 +767,8 @@ export default {
       //   { name2: "Lisa", age2: 21, gender2: "female" },
       //   { name3: "Fred", age3: 41, gender3: "male" },
       // ];
+      this.outputFiles = this.files;
+      console.log("outputFiles", this.outputFiles);
       if (this.outputFiles.length === 0) {
         window.alert("ファイルを入力してください。");
       } else {
