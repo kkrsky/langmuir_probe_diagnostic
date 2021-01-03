@@ -453,6 +453,10 @@ export default {
           label: "Vf_calc [V]",
           data: 0,
         },
+        λde: {
+          label: "Deby Leng [mm]",
+          data: 0,
+        },
       },
       /**
        * //methods data
@@ -1082,6 +1086,10 @@ export default {
         Vf_calc: {
           label: "Vf_calc [V]",
           data: file.VfObj.Vf_calc,
+        },
+        λde: {
+          label: "Deby Leng [mm]",
+          data: file.debyLength,
         },
 
         // reload: 0,

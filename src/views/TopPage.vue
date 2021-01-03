@@ -623,6 +623,7 @@ export default {
             VfObj = this.calcVf({ formatTextArry, TeObj });
             let NeObj = this.calcNe({ isatDataObj, TeObj });
             let VsObj = this.calcVs({ formatTextArry, VfObj, TeObj });
+            let debyLength = this.calcDebyLength({ NeObj, TeObj });
             // //create chart
             // let addChartObj = {
             //   chartName: chartName,
@@ -657,6 +658,7 @@ export default {
                 TeObj,
                 NeObj,
                 VsObj,
+                debyLength,
               };
 
               this.$store.dispatch("main/initChartList", {
@@ -863,17 +865,18 @@ export default {
       let pickUpKeyObjArry = [
         { key: "id" },
         { key: "fileName" },
-        { key: "NeObj.ne_isat" },
-        { key: "TeObj.Te" },
+        { key: "NeObj.ne_isat", label: "ne_isat[cm^-3]" },
+        { key: "TeObj.Te", label: "Te[eV]" },
         { key: "TeObj.logIe_leastLineObj.from", label: "Te_from" },
         { key: "TeObj.logIe_leastLineObj.to", label: "Te_to" },
 
-        { key: "VfObj.Vf_act" },
-        { key: "VfObj.Vf_calc" },
-        { key: "VsObj.Vs_calc" },
-        { key: "isatDataObj.isat" },
+        { key: "VfObj.Vf_act", label: "Vf_act[V]" },
+        { key: "VfObj.Vf_calc", label: "Vf_calc[V]" },
+        { key: "VsObj.Vs_calc", label: "Vs_calc[V]" },
+        { key: "isatDataObj.isat", label: "isat[mA]" },
         { key: "isatDataObj.isatData_leastLineObj.from", label: "isat_from" },
         { key: "isatDataObj.isatData_leastLineObj.to", label: "isat_to" },
+        { key: "debyLength", label: "debyLength[mm]" },
       ];
       let pickedArry = pickUp(pickUpKeyObjArry, file_cp);
 
@@ -1843,6 +1846,22 @@ export default {
         Vs_calc,
       };
       return VsObj;
+    },
+    calcDebyLength({ NeObj, TeObj }) {
+      //デバイ長計算
+      let ep0 = this.cons.ep0;
+      let e = this.cons.e;
+      let Te = TeObj.Te;
+      // let Te = 1;
+      let Ne = NeObj.ne_isat * 1e6; //[m^-3]
+      // let Ne = 1e16; //[m^-3]
+      let debyLength = Math.sqrt((ep0 * Te) / (Ne * e)); //[m]
+      debyLength = debyLength * 1000; //[mm]
+      console.log(
+        "[Result] debyLength[mm]",
+        Number(debyLength.toPrecision(4)).toExponential()
+      );
+      return debyLength;
     },
 
     ////////////////////////////
