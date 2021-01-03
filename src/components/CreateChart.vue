@@ -44,7 +44,6 @@ export default {
       if (chartName.split("-scoped").length > 1) {
         isScoped = true;
       }
-      // console.log("insertElm", insertElm, chartName);
       let newElm = window.document.createElement("canvas");
       newElm.className = "canvas-chart";
       newElm.id = "canvas-" + chartName;
@@ -55,10 +54,19 @@ export default {
         newElm.style.height = "50vh";
         newElm.style.width = "50vh";
       }
-
+      // console.log("insertElm", insertElm, chartName, newElm);
+      // console.log(JSON.parse(JSON.stringify(this.createChart)));
       insertElm.appendChild(newElm);
     },
-    createChartVI({ chartName, labelName, setDataArry, addLineObj }) {
+    createChartVI({
+      chartName,
+      labelName,
+      setDataArry,
+      addLineObj,
+      addLineObj_Isat,
+      addLineObj_Te,
+      addGraphDataArry,
+    }) {
       //canvas#"canvas-" + chartNameにグラフを描画
       let datasets = [
         {
@@ -71,12 +79,63 @@ export default {
         },
       ];
 
+      if (addGraphDataArry !== undefined) {
+        let addGraphDataArry_detaset = {
+          label: "log(Ie)",
+          data: addGraphDataArry,
+          backgroundColor: "RGBA(0,255,255, 1)",
+          borderColor: "rgba(0,255,255,1)",
+          pointRadius: 1,
+          // pointStyle: "circle",
+          // pointBackgroundColor: "RGBA(0,0,0, 1)",
+          pointHoverRadius: this.createChart.setting.point.hoverSize,
+          pointHitRadius: this.createChart.setting.point.pointHitRadius,
+          showLine: false,
+          fill: false,
+          // borderWidth: 1,
+        };
+        datasets.unshift(addGraphDataArry_detaset);
+      }
+
+      let generateRotArry = (type, a_coord) => {
+        let rotArry = [];
+        let hideRot = null;
+        switch (type) {
+          case "Isat": {
+            hideRot = 90 - (Math.atan2(1, Math.abs(a_coord)) * 180) / Math.PI;
+
+            break;
+          }
+          case "Te": {
+            hideRot = -(Math.atan2(1, Math.abs(a_coord)) * 180) / Math.PI;
+
+            break;
+          }
+        }
+        // console.log("hideRot", hideRot, a_coord);
+        // dataArry.forEach((dot, i) => {
+        //   if (i === 0 || i === dataArry.length - 1) rotArry.push(hideRot);
+        //   else rotArry.push(null);
+        // });
+        return [hideRot, null, null, hideRot];
+      };
+      let generatePointStyleArry = (dataArry) => {
+        let pointStyleArry = [];
+
+        // dataArry.forEach((dot, i) => {
+        //   if (i === 0 || i === dataArry.length - 1) pointStyleArry.push("line");
+        //   else pointStyleArry.push("circle");
+        // });
+        return ["line", "circle", "circle", "line"];
+        // return ["line", "circle", "circle", "line"];
+      };
+
       if (addLineObj !== undefined) {
         let addDatasetLineObj = {
           label: "least square method line",
           data: addLineObj.lineData_scatter,
-          backgroundColor: "RGBA(255,255,255, 0)",
-          borderColor: "rgba(0,0,0,1)",
+          backgroundColor: "RGBA(0,0,0,1)",
+          borderColor: "rgba(0,0,0, 1)",
           pointRadius: 2,
           pointStyle: "circle",
           // pointBackgroundColor: "RGBA(0,0,0, 1)",
@@ -88,7 +147,48 @@ export default {
           borderWidth: 1,
         };
         // console.log(addLine);
-        datasets.push(addDatasetLineObj);
+        datasets.unshift(addDatasetLineObj);
+      }
+
+      if (addLineObj_Te !== undefined) {
+        let addDatasetLineObj = {
+          label: "LSM line(Te)",
+          data: addLineObj_Te.lineData_scatter,
+          backgroundColor: "RGBA(255,0,255, 1)",
+          borderColor: "rgba(255,0,255, 1)",
+          pointRadius: 2,
+          rotation: generateRotArry("Te", addLineObj_Te.a_coord),
+          pointStyle: generatePointStyleArry(),
+          // pointBackgroundColor: "RGBA(0,0,0, 1)",
+          pointHoverRadius: this.createChart.setting.point.hoverSize,
+          pointHitRadius: this.createChart.setting.point.pointHitRadius,
+          tension: 0,
+          showLine: true,
+          fill: false,
+          borderWidth: 1,
+        };
+        // console.log(addLine);
+        datasets.unshift(addDatasetLineObj);
+      }
+      if (addLineObj_Isat !== undefined) {
+        let addDatasetLineObj = {
+          label: "LSM line(Isat)",
+          data: addLineObj_Isat.lineData_scatter,
+          backgroundColor: "RGBA(225,95,150,1)",
+          borderColor: "rgba(225,95,150,1)",
+          pointRadius: 2,
+          rotation: generateRotArry("Isat", addLineObj_Isat.a_coord),
+          pointStyle: generatePointStyleArry(),
+          // pointBackgroundColor: "RGBA(0,0,0, 1)",
+          pointHoverRadius: this.createChart.setting.point.hoverSize,
+          pointHitRadius: this.createChart.setting.point.pointHitRadius,
+          tension: 0,
+          showLine: true,
+          fill: false,
+          borderWidth: 1,
+        };
+        // console.log(addLine);
+        datasets.unshift(addDatasetLineObj);
       }
       //   console.log(chartName, labelName)
       let chartVI_ctx = window.document
@@ -157,6 +257,7 @@ export default {
           },
           maintainAspectRatio: true,
           responsive: true,
+          animation: false,
         },
       });
       this.currentChart = chartData;

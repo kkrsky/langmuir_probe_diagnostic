@@ -5,6 +5,8 @@ import router from "./router";
 import store from "./store";
 import vuetify from "./plugins/vuetify";
 import ChartJS from "chart.js";
+import helpers from "./mixins/helpers";
+
 // import VueGoodTablePlugin from "vue-good-table";
 
 //cssライブラリ読み込み
@@ -19,6 +21,7 @@ window.Chart = ChartJS;
 // Vue.mixin(tes);
 // Vue.use(VueGoodTablePlugin);
 Vue.use(window.vueGoodTable.default);
+Vue.mixin(helpers);
 
 //Vue初期化
 new Vue({
