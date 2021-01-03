@@ -2,11 +2,24 @@
   <div id="ResultTable">
     <v-container>
       <v-row>
-        <v-col v-for="key in Object.keys(result)" :key="key" cols="3">
-          <span>{{ key }}: </span><span>{{ result[key] }}</span>
+        <v-col
+          v-for="key in Object.keys(result)"
+          v-show="key !== 'env'"
+          :key="key"
+          cols="3"
+        >
+          <v-textarea
+            :label="result[key].label"
+            :value="result[key].data"
+            rows="1"
+            disabled
+            class="result-item"
+          >
+          </v-textarea>
+          <!-- <span>{{ key }}: </span><span>{{ result[key] }}</span> -->
         </v-col>
       </v-row>
-      <v-btn @click="test()">test</v-btn>
+      <!-- <v-btn @click="test()">test</v-btn> -->
     </v-container>
   </div>
 </template>
@@ -60,7 +73,24 @@ export default {
   .container {
     width: 100%;
     height: 100%;
-    padding: 0;
+    // padding: 0;
+    .row {
+      height: 100%;
+      .col {
+        // height: 50%;
+        padding: 0 1vw;
+      }
+    }
+  }
+  .result-item {
+    .v-text-field__slot {
+      .v-label {
+        color: red !important;
+      }
+      textarea {
+        color: green !important;
+      }
+    }
   }
 }
 </style>

@@ -61,15 +61,27 @@
                     @change="showGraphController($event)"
                   ></v-select>
                 </v-col>
-                <v-col>
+                <!-- <v-col>
                   <v-btn @click="testChartContainer()">test</v-btn>
-                </v-col>
+                </v-col> -->
                 <v-col>
                   <p>
                     <!-- {{ currentData.addLineObj.error.message }} -->
                     {{ file.isatDataObj.isatData_leastLineObj.error.message }}
-                    <span v-if="currentData.addLineObj_Isat">
-                      {{ currentData.addLineObj_Isat.a_coord }}
+                    <br />
+                    <span v-if="display.state.isShowFromTo_Isat">
+                      Isat 傾き:{{
+                        Number(
+                          currentData.addLineObj_Isat.a_coord.toPrecision(4)
+                        ).toExponential()
+                      }}
+                    </span>
+                    <span v-if="display.state.isShowFromTo_Te">
+                      Te 傾き:{{
+                        Number(
+                          currentData.addLineObj_Te.a_coord.toPrecision(4)
+                        ).toExponential()
+                      }}
                     </span>
                   </p>
                 </v-col>
@@ -193,7 +205,10 @@
           <div class="result-container">
             <!-- result{{ file.name }} -->
             <!-- <table-component></table-component> -->
-            <result-table :result="resultObj"></result-table>
+            <result-table
+              :result="resultObj"
+              :key="resultObj.env.reload"
+            ></result-table>
           </div>
         </div>
         <!-- ------------- -->
@@ -252,7 +267,10 @@
             </div>
             <div class="result-container">
               <!-- result{{ file.name }} -->
-              <result-table :result="resultObj"></result-table>
+              <result-table
+                :result="resultObj"
+                :key="resultObj.env.reload"
+              ></result-table>
 
               <!-- <table-component></table-component> -->
             </div>
@@ -330,7 +348,10 @@ export default {
               rawText: null,
               formatText: null,
               scatterData: null,
-              VfObj: null,
+              VfObj: {
+                Vf_act: null,
+                Vf_calc: null,
+              },
               isatDataObj: {
                 //diff data
                 diffData_arry: null,
@@ -341,6 +362,22 @@ export default {
                 isatData_scatter: null,
                 isatData_leastLineObj: null,
                 isat: null,
+              },
+              TeObj: {
+                logIe_arry: null,
+                logIe_scatter: null,
+                logIe_leastLineObj: null,
+                logIe_fromto_auto: null,
+                func_setLeastLineObj: null, //function
+                Te: null,
+              },
+              NeObj: {
+                ne_isat: null,
+              },
+              VsObj: {
+                diffIp_2nd_scatter: null,
+                diffData_leastLineObj: null,
+                Vs_calc: null,
               },
             },
             chartName: null,
@@ -384,13 +421,38 @@ export default {
       isAutoLine_Te: true,
 
       resultObj: {
-        Iis_fit: 1,
-        Ies_calc: 0.03343,
-        Te: 20,
-        Ne_Iis: 0.03343,
-        Ne_Ies: 0.03343,
-        Vf: 0.03343,
-        Vs_calc: 0.03343,
+        env: {
+          isInit: false,
+          label: "this is env",
+          data: 0,
+          reload: 0,
+        },
+        Iis_fit: {
+          label: "Iis_fit [mA]",
+          data: 0,
+        },
+        // Ies_calc: null,
+        Te: {
+          label: "Te [eV]",
+          data: 0,
+        },
+        Ne_Iis: {
+          label: "Ne_Iis [cm^-3]",
+          data: 0,
+        },
+        // Ne_Ies: null,
+        Vs_calc: {
+          label: "Vs_calc [V]",
+          data: 0,
+        },
+        Vf_fit: {
+          label: "Vf_fit [V]",
+          data: 0,
+        },
+        Vf_calc: {
+          label: "Vf_calc [V]",
+          data: 0,
+        },
       },
       /**
        * //methods data
@@ -661,6 +723,7 @@ export default {
       // console.log(this.display);
       // console.log("chartList", this.$store.state.main.chartList);
       this.updateChart("hard");
+      this.updateResult();
       // this.updateChart();
       // this.showNextGraph(0);
       // this.helper.snackFire({ message: "hello" });
@@ -976,6 +1039,56 @@ export default {
           // this.createChartObj.reload++;
         }, 1);
       }
+      this.updateResult();
+    },
+    updateResult() {
+      let presenter = (obj) => {
+        for (let key in obj) {
+          obj[key].data = obj[key].data.toPrecision(4);
+        }
+        // console.log(obj);
+        return obj;
+      };
+      let file = this.currentData.file;
+      // console.log(file.isatDataObj.isat, file.isatDataObj.isat.toPrecision(4));
+      let resultObj = {
+        env: {
+          label: "this is env",
+          data: 0,
+          reload: this.resultObj.env.isInit ? this.resultObj.env.reload : 0,
+        },
+        Iis_fit: {
+          label: "Iis_fit [mA]",
+          data: file.isatDataObj.isat,
+        },
+        // Ies_calc: null,
+        Te: {
+          label: "Te [eV]",
+          data: file.TeObj.Te,
+        },
+        Ne_Iis: {
+          label: "Ne_Iis [cm^-3]",
+          data: file.NeObj.ne_isat,
+        },
+        // Ne_Ies: null,
+        Vs_calc: {
+          label: "Vs_calc [V]",
+          data: file.VsObj.Vs_calc,
+        },
+        Vf_fit: {
+          label: "Vf_fit [V]",
+          data: file.VfObj.Vf_act,
+        },
+        Vf_calc: {
+          label: "Vf_calc [V]",
+          data: file.VfObj.Vf_calc,
+        },
+
+        // reload: 0,
+      };
+      this.resultObj.env.isInit = true;
+      this.resultObj = presenter(resultObj);
+      this.resultObj.env.reload += 1;
     },
 
     //button actions
