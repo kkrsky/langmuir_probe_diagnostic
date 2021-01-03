@@ -2,14 +2,22 @@ let main = {
   namespaced: true,
   state: () => ({
     chartList: {},
+    loadingObj: {
+      isLoading: false,
+      message: null,
+    },
   }),
   getters: {
     getChartObj: (state) => (chartName) => {
-      console.log("chartName", chartName);
+      // console.log("chartName", chartName);
       return state.chartList[chartName];
     },
     getChartObj2: (state) => {
       return state.chartList;
+    },
+    getLoadingObj: (state) => {
+      console.log(state.loadingObj);
+      return state.loadingObj;
     },
   },
   mutations: {},
@@ -50,6 +58,20 @@ let main = {
     },
     setFromToAuto({ state }, { chartName, from_auto, to_auto }) {
       state.chartList[chartName]["chartData"];
+    },
+    loadingHandler({ state }, { type, message }) {
+      console.log("set", type, message);
+      switch (type) {
+        case "start": {
+          state.loadingObj.isLoading = true;
+          state.loadingObj.message = message;
+          break;
+        }
+        case "end": {
+          state.loadingObj.isLoading = false;
+          break;
+        }
+      }
     },
   },
 };

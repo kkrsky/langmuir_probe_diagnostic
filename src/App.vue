@@ -1,5 +1,9 @@
 <template>
   <v-app>
+    <loading-container
+      :loadingObj="loadingObj"
+      :key="loadingObj.isLoading"
+    ></loading-container>
     <v-snackbar v-model="isSnackbar" app top :timeout="snackbarObj.timeout">{{
       snackbarObj.message
     }}</v-snackbar>
@@ -8,6 +12,7 @@
 </template>
 
 <script>
+import LoadingContainer from "./components/LoadingContainer";
 export default {
   name: "App",
   data() {
@@ -37,12 +42,17 @@ export default {
       //   this.$store.dispatch("snackbarState/setMessage", val);
       // },
     },
+    loadingObj() {
+      return this.$store.getters["main/getLoadingObj"];
+    },
   },
   methods: {},
   watch: {},
   beforeCreate() {},
   mounted() {},
-  components: {},
+  components: {
+    LoadingContainer,
+  },
 };
 </script>
 <style lang="scss"></style>

@@ -227,6 +227,7 @@ export default {
         calc: { name: "calc", icon: "mdi-calculator" },
         setting: { name: "setting", icon: "mdi-import" },
         test: { name: "test", icon: "mdi-pen" },
+        testLoad: { name: "testLoad_start", icon: "mdi-pen" },
       },
 
       ////////////////////////////
@@ -522,6 +523,30 @@ export default {
         }
       }
     },
+    loadingHandler({ type, message }) {
+      switch (type) {
+        case "start": {
+          this.isLoading = true;
+          this.$store.dispatch("main/loadingHandler", {
+            type: type,
+            message: message,
+          });
+
+          break;
+        }
+        case "end": {
+          this.isLoading = false;
+          this.$store.dispatch("main/loadingHandler", {
+            type: type,
+          });
+
+          break;
+        }
+        default: {
+          console.error("error:pls input start or end");
+        }
+      }
+    },
     ////////////////////////////
     //files
     ////////////////////////////
@@ -532,7 +557,8 @@ export default {
     onInputFiles(event) {
       const files = event.target.files;
       let readerArry = [];
-      this.isLoading = true;
+      this.loadingHandler({ type: "start", message: "ファイル読み込み中..." });
+
       for (let i = 0; i < files.length; i++) {
         let currentFile = files[i];
 
@@ -602,8 +628,7 @@ export default {
             this.files.push(file);
             if (readFileEnd) {
               //最後のファイルが読み込まれた
-              console.log("enddddd", this);
-              this.isLoading = false;
+              this.loadingHandler({ type: "end" });
             }
           } else {
             window.alert(
@@ -819,6 +844,13 @@ export default {
         }
         case this.titleList.test.name: {
           this.test2();
+          break;
+        }
+        case this.titleList.testLoad.name: {
+          this.loadingHandler({ type: "start", message: "test..." });
+          window.setTimeout(() => {
+            this.loadingHandler({ type: "end" });
+          }, 1000);
           break;
         }
       }
