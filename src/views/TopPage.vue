@@ -27,29 +27,47 @@
       </v-list>
     </v-navigation-drawer>
     <top-header :title="title" :left="leftBtn" :right="rightBtn"></top-header>
+
     <v-main>
-      <p>main</p>
+      <!-- <p>main</p> -->
       <!-- <table-component></table-component> -->
       <!-- ---------- -->
       <!-- TopCalc -->
       <!-- ---------- -->
+      <v-card id="TopCalc" :loading="isLoading" outlined>
+        <template slot="progress">
+          <v-progress-linear
+            color="deep-purple"
+            height="10"
+            indeterminate
+          ></v-progress-linear>
+        </template>
+        <div v-if="isShowDisplayCalc">
+          <v-card-title
+            ><h3>グラフ</h3>
 
-      <div id="TopCalc" v-if="isShowDisplayCalc">
-        <h3>グラフ</h3>
-        <span>{{ files.length }}ファイル</span>
-        <div class="TopCalc-container">
-          <!-- <chart-container :files="files"></chart-container> -->
+            <span> : {{ files.length }}ファイル</span></v-card-title
+          >
+          <v-divider></v-divider>
 
-          <div v-for="file in files" :key="file.id">
-            <chart-container
-              :file="file"
-              @changeFrom="setChange('from', $event, file)"
-              @changeTo="setChange('to', $event, file)"
-            ></chart-container>
+          <div
+            :class="{
+              TopCalcContainer_lg: !isShowDisplaySetting,
+              TopCalcContainer_md: isShowDisplaySetting,
+            }"
+          >
+            <!-- <chart-container :files="files"></chart-container> -->
+
+            <div v-for="file in files" :key="file.id">
+              <chart-container
+                :file="file"
+                @changeFrom="setChange('from', $event, file)"
+                @changeTo="setChange('to', $event, file)"
+              ></chart-container>
+            </div>
           </div>
         </div>
-      </div>
-
+      </v-card>
       <!-- ---------- -->
       <!-- ScopedGraphViewer -->
       <!-- ---------- -->
@@ -57,57 +75,93 @@
       <!-- ---------- -->
       <!-- TopSetting -->
       <!-- ---------- -->
-      <div id="TopSetting" v-show="isShowDisplaySetting">
+      <v-card id="TopSetFiles" v-show="isShowDisplaySetting" outlined>
         <div id="files">
-          <h3>ファイル操作</h3>
-          <div class="mt-5"></div>
-          <v-select
-            v-model="inputUnitVoltSelected"
-            :value="inputUnitVoltSelected"
-            :items="inputUnitVoltList"
-            label="input unit Volt"
-            outlined
-          ></v-select>
-          <v-select
-            v-model="inputUnitAmpereSelected"
-            :value="inputUnitAmpereSelected"
-            :items="inputUnitAmpereList"
-            label="input unit Ampere"
-            outlined
-          ></v-select>
-          <p>※入力ファイルは[V,A]の順</p>
-          <p>※出力は[V,mA]</p>
-          <input type="file" @change="onInputFiles" multiple />
-          <v-btn @click="onOutputFiles">csv出力</v-btn>
+          <v-card-title><h3>ファイル操作</h3></v-card-title>
+
+          <!-- <div class="mt-5"></div> -->
+
+          <v-container>
+            <v-row>
+              <v-col>
+                <v-btn for="inputFile">
+                  <label class="input-file-label" for="inputFile">
+                    ファイルを選択
+                    <input
+                      id="inputFile"
+                      type="file"
+                      @change="onInputFiles"
+                      multiple
+                      accept="text/plain,text/csv"
+                      style="display:none"
+                    />
+                  </label>
+                </v-btn>
+                <span>※入力ファイルは[V,A]の順</span>
+              </v-col>
+              <v-col>
+                <v-btn @click="onOutputFiles">csv出力</v-btn>
+                <span>※出力は[V,mA]</span>
+              </v-col>
+            </v-row>
+            <v-row>
+              <v-col>
+                <v-select
+                  v-model="inputUnitVoltSelected"
+                  :value="inputUnitVoltSelected"
+                  :items="inputUnitVoltList"
+                  label="input unit Volt"
+                  outlined
+                ></v-select>
+              </v-col>
+              <v-col>
+                <v-select
+                  v-model="inputUnitAmpereSelected"
+                  :value="inputUnitAmpereSelected"
+                  :items="inputUnitAmpereList"
+                  label="input unit Ampere"
+                  outlined
+                ></v-select>
+              </v-col>
+            </v-row>
+          </v-container>
         </div>
+      </v-card>
+      <v-card id="TopSetParams" v-show="isShowDisplaySetting" outlined>
         <div id="initParameter">
           <h3>初期条件設定</h3>
-          <div class="mt-5"></div>
-          <v-text-field
-            v-model="cons.probeArea"
-            label="Area of probe [cm^2]"
-            outlined
-            clearable
-          ></v-text-field>
-          <v-select
-            value="Ar"
-            :items="gasType"
-            label="Gas Type"
-            outlined
-            @change="onChangeGasType"
-          ></v-select>
-          <v-text-field
-            v-model="cons.massAtom"
-            label="Mass of Atom [kg]"
-            outlined
-            :readonly="!isOtherGasType"
-          ></v-text-field>
+          <!-- <div class="mt-5"></div> -->
+          <v-container>
+            <v-row>
+              <v-col>
+                <v-text-field
+                  v-model="cons.probeArea"
+                  label="Area of probe [cm^2]"
+                  outlined
+                  clearable
+                ></v-text-field>
+              </v-col>
+              <v-col cols="2">
+                <v-select
+                  value="Ar"
+                  :items="gasType"
+                  label="Gas Type"
+                  outlined
+                  @change="onChangeGasType"
+                ></v-select>
+              </v-col>
+              <v-col>
+                <v-text-field
+                  v-model="cons.massAtom"
+                  label="Mass of Atom [kg]"
+                  outlined
+                  :disabled="!isOtherGasType"
+                ></v-text-field>
+              </v-col>
+            </v-row>
+          </v-container>
         </div>
-      </div>
-
-      <v-container>
-        <p>container</p>
-      </v-container>
+      </v-card>
     </v-main>
     <!-- <top-footer></top-footer> -->
   </div>
@@ -191,6 +245,7 @@ export default {
       ////////////////////////////
       //Top calc data
       ////////////////////////////
+      isLoading: false,
       test: {
         // least: null,
       },
@@ -477,12 +532,14 @@ export default {
     onInputFiles(event) {
       const files = event.target.files;
       let readerArry = [];
-
+      this.isLoading = true;
       for (let i = 0; i < files.length; i++) {
         let currentFile = files[i];
 
         readerArry[i] = new FileReader();
-        readerArry[i].onload = (e) => {
+        readerArry[i].cnt = i;
+        let readFileEnd = readerArry[files.length - 1];
+        readerArry[i].onload = (e, i) => {
           //text format
           this.debugStartConsole({ currentFile });
           let attribute = "normal"; //normal:通常,scoped:拡大表示
@@ -543,6 +600,11 @@ export default {
               file,
             });
             this.files.push(file);
+            if (readFileEnd) {
+              //最後のファイルが読み込まれた
+              console.log("enddddd", this);
+              this.isLoading = false;
+            }
           } else {
             window.alert(
               "正しいデータフォーマットのファイルを入力してください。:" +
@@ -1603,12 +1665,28 @@ export default {
 </script>
 
 <style lang="scss">
+.input-file-label {
+  // color: red;
+}
 #TopCalc {
-  padding: 10px 0;
-  border: solid 1px #bbb;
-  border-radius: 2%;
+  // display: flex;
+  // justify-content: center;
+  margin: 0 auto;
+  // padding: 10px 0;
+  width: 80vw;
+  min-width: 900px;
+  // overflow: scroll;
+  // max-width: 1500px;
+
+  // border: solid 1px #bbb;
+  // border-radius: 2%;
   // height: 100vh;
-  .TopCalc-container {
+  .TopCalcContainer_lg {
+    height: 80vh;
+    overflow: scroll;
+  }
+
+  .TopCalcContainer_md {
     height: 60vh;
     overflow: scroll;
   }
@@ -1616,17 +1694,31 @@ export default {
 #ScopedGraphViewer {
   // position: absolute;
   // background-color: white;
+  margin: 0 auto;
+
   padding: 10px 0;
   border: solid 1px #bbb;
   border-radius: 2%;
   // height: 100%;
 }
-#TopSetting {
+#TopSetFiles {
+  margin: 0 auto;
+  width: 80vw;
+  min-width: 900px;
+
   #files {
     padding: 10px 0;
     border: solid 1px #bbb;
     border-radius: 2%;
   }
+}
+
+#TopSetParams {
+  width: 80vw;
+  min-width: 900px;
+
+  margin: 0 auto;
+
   #initParameter {
     padding: 10px 0;
     border: solid 1px #bbb;

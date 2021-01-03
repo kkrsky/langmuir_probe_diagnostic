@@ -1462,7 +1462,7 @@ export default {
   .col {
     margin: 0;
     padding: 0 !important;
-    overflow: scroll;
+    // overflow: scroll;
   }
   .btn-next-graph {
     height: 100%;
