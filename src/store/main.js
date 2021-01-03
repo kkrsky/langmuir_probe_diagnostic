@@ -46,7 +46,8 @@ let main = {
       //   chartData: null, //chart obj
       // };
       file.chartData = null; //chart obj
-      state.chartList[chartName] = file;
+      state.chartList[chartName] = {};
+      // state.chartList[chartName] = file; //fileオブジェクトにChartオブジェクトが挿入されてしまう
     },
     setChartList({ state }, { chartName, chartData }) {
       if (state.chartList[chartName])

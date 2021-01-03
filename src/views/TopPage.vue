@@ -97,11 +97,21 @@
                     />
                   </label>
                 </v-btn>
-                <span>※入力ファイルは[V,A]の順</span>
+                <p>※入力ファイルは[V,A]の順</p>
+              </v-col>
+              <v-col cols="6">
+                <v-textarea
+                  v-model="outputFileName"
+                  clearable
+                  outlined
+                  rows="1"
+                  label="保存するファイル名"
+                >
+                </v-textarea>
               </v-col>
               <v-col>
                 <v-btn @click="onOutputFiles">csv出力</v-btn>
-                <span>※出力は[V,mA]</span>
+                <p>※出力は[V,mA]</p>
               </v-col>
             </v-row>
             <v-row>
@@ -213,6 +223,7 @@ export default {
       ////////////////////////////
       files: [], //file_i
       outputFiles: [], //file_i objのkeyがcolタイトルになる。keyは全てのデータにおいて同一でなければいけない
+      outputFileName: "__Langmuir_probe_diagnostic__",
       // inputDataTypeList: ["simple .txt", "without 2 header .txt"],
       // inputDataTypeSelected: "without 2 header .txt",
       inputUnitVoltSelected: "V",
@@ -769,17 +780,144 @@ export default {
       //   { name2: "Lisa", age2: 21, gender2: "female" },
       //   { name3: "Fred", age3: 41, gender3: "male" },
       // ];
-      this.outputFiles = this.files;
+      this.outputFiles = this.files.map((file) => {
+        return this.outputFilePresenter(file);
+      });
       console.log("outputFiles", this.outputFiles);
       if (this.outputFiles.length === 0) {
-        window.alert("ファイルを入力してください。");
+        window.alert("入力されているファイルがありません。");
       } else {
-        new CSV(this.outputFiles).save("__Langmuir_probe_diagnostic__.csv");
+        new CSV(this.outputFiles).save(this.outputFileName + ".csv");
       }
     },
     // onInputDataTypeType(selectVal) {
     //   this.inputDataTypeSelected = selectVal;
     // },
+    outputFilePresenter(file) {
+      let file_cp = this.helper._cp(file);
+      let outputFile = {};
+      // let file_cp = this.helper._cp(file);
+
+      //不要なキーを削除
+      let exceptKeyArry = ["rawText", "chartData", "scatterData"];
+      let keys = Object.keys(file_cp);
+      exceptKeyArry.forEach((exceptKey) => {
+        delete file_cp[exceptKey];
+      });
+
+      //重要な情報をピックアップ,保存用オブジェクトに格納
+      let pickUp = (pickUpKeyObjArry, findObj) => {
+        let result = [];
+        // let keyParser = pickUpKey.split(".");
+        // pickUpKeyArry.reduce((acc, val) => {});
+        let pickUpKeyArry = [];
+        let pickUpLabelArry = [];
+        let isLabeled = false;
+
+        if (Boolean(pickUpKeyObjArry[0].key)) {
+          //obj型
+
+          //labelを補完
+          pickUpKeyObjArry = pickUpKeyObjArry.map((obj) => {
+            let { key, label } = obj;
+            if (label) return obj;
+            else return { key, label: key };
+          });
+          isLabeled = true;
+          pickUpKeyArry = pickUpKeyObjArry.map((obj) => {
+            return obj.key;
+          });
+          pickUpLabelArry = pickUpKeyObjArry.map((obj) => {
+            return obj.label;
+          });
+        } else if (Array.isArray(pickUpKeyObjArry)) {
+          isLabeled = false;
+          pickUpKeyArry = pickUpKeyObjArry;
+        } else {
+          console.error("error pls correct arg");
+          return false;
+        }
+        pickUpKeyArry.forEach((pickUpKey, pickUp_i) => {
+          let keyParser = pickUpKey.split(".");
+          keyParser.unshift(findObj);
+          let maxIndex = keyParser.length - 1;
+          let pickedObj = {
+            key: null,
+            data: null,
+            label: null,
+          };
+          let target = keyParser.reduce((file, key, i) => {
+            if (i === maxIndex) {
+              pickedObj.key = key;
+              isLabeled
+                ? (pickedObj.label = pickUpLabelArry[pickUp_i])
+                : (pickedObj.label = key);
+            }
+            return file[key];
+          });
+          pickedObj.data = target;
+          result.push(pickedObj);
+        });
+        return result;
+      };
+      let pickUpKeyObjArry = [
+        { key: "id" },
+        { key: "fileName" },
+        { key: "NeObj.ne_isat" },
+        { key: "TeObj.Te" },
+        { key: "TeObj.logIe_leastLineObj.from", label: "Te_from" },
+        { key: "TeObj.logIe_leastLineObj.to", label: "Te_to" },
+
+        { key: "VfObj.Vf_act" },
+        { key: "VfObj.Vf_calc" },
+        { key: "VsObj.Vs_calc" },
+        { key: "isatDataObj.isat" },
+        { key: "isatDataObj.isatData_leastLineObj.from", label: "isat_from" },
+        { key: "isatDataObj.isatData_leastLineObj.to", label: "isat_to" },
+      ];
+      let pickedArry = pickUp(pickUpKeyObjArry, file_cp);
+
+      //outputFileにデータを格納
+      pickedArry.forEach((pickObj) => {
+        let { key, label, data } = pickObj;
+        outputFile[label] = data;
+      });
+
+      //保存に不要な設定を削除, (文字列が長すぎると正しく保存できない)
+      let pickUp_delete = (pickUpKeyArry, findObj) => {
+        pickUpKeyArry.forEach((pickUpKey) => {
+          let keyParser = pickUpKey.split(".");
+          keyParser.unshift(findObj);
+          let maxIndex = keyParser.length - 1;
+
+          let target = keyParser.reduce((file, key, i) => {
+            if (i === maxIndex) {
+              delete file[key];
+            }
+            return file[key];
+          });
+        });
+        return findObj;
+      };
+      let deleteKeyArry = [
+        "TeObj.logIe_scatter",
+        // "VsObj.diffIp_2nd_scatter",
+        "isatDataObj.diffData_scatter",
+        "isatDataObj.isatData_scatter",
+        "isatDataObj.diffData_arry",
+      ];
+      let file_cp_configs = pickUp_delete(deleteKeyArry, file_cp);
+      outputFile.__config_start__ = "<backupSetting>";
+      for (let key in file_cp_configs) {
+        outputFile[key + "_JSON"] = JSON.stringify(file_cp_configs[key]);
+      }
+      outputFile.__config_end__ = "</backupSetting>";
+
+      // outputFile.configJSON = JSON.stringify(file_cp_configs);
+
+      // console.log("pickUpedArry", outputFile);
+      return outputFile;
+    },
     rawTextData2Obj(rawTextData) {
       //init
 
