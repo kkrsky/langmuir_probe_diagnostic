@@ -4,9 +4,7 @@
       <!-- v-show="isShowDrower"-->
       <v-list-item>
         <v-list-item-content>
-          <v-list-item-title class="title">
-            Calculator
-          </v-list-item-title>
+          <v-list-item-title class="title"> Calculator </v-list-item-title>
           <v-list-item-subtitle>
             Langmuir probe diagnostic
           </v-list-item-subtitle>
@@ -93,7 +91,7 @@
                       @change="onInputFiles"
                       multiple
                       accept="text/plain,text/csv"
-                      style="display:none"
+                      style="display: none"
                     />
                   </label>
                 </v-btn>
@@ -271,6 +269,7 @@ export default {
         //user setting
         massAtom: Number(6.63385357335952 * 1e-26), //ガス原子の質量[kg] ,初期設定はAr
         probeArea: Number(0.097075213), //プローブ表面積[cm^2]
+        currentGas: "Ar",
       },
     };
   },
@@ -874,6 +873,7 @@ export default {
         { key: "VfObj.Vf_calc", label: "Vf_calc[V]" },
         { key: "VsObj.Vs_calc", label: "Vs_calc[V]" },
         { key: "isatDataObj.isat", label: "isat[mA]" },
+        { key: "isatDataObj.Jsat", label: "Jsat[mA/cm^2]" },
         { key: "isatDataObj.isatData_leastLineObj.from", label: "isat_from" },
         { key: "isatDataObj.isatData_leastLineObj.to", label: "isat_to" },
         { key: "debyLength", label: "debyLength[mm]" },
@@ -883,6 +883,18 @@ export default {
       //outputFileにデータを格納
       pickedArry.forEach((pickObj) => {
         let { key, label, data } = pickObj;
+        outputFile[label] = data;
+      });
+
+      //その他環境情報を保存
+      let envArry = [
+        { label: "probeArea[cm^2]", data: this.cons.probeArea },
+        { label: "gasType", data: this.cons.currentGas },
+        { label: "massAtom", data: this.cons.massAtom },
+      ];
+
+      envArry.forEach((pickObj) => {
+        let { label, data } = pickObj;
         outputFile[label] = data;
       });
 
@@ -960,9 +972,34 @@ export default {
       //
       // console.log(unitV, unitA);
       rawTextData = rawTextData.trim().split("\n");
-
+      // console.log("rawTextData", rawTextData);
       try {
         rawTextData = rawTextData.map((val) => {
+          // console.log("val", val.split(" "));
+          // let splited = val.split("	");
+          // console.log("1", splited);
+
+          // if (splited.length <= 1) val.split("	");
+          // if (splited.length <= 1) val.split("  ");
+
+          // let split_all = val.split("");
+          // let numArry = [];
+          // console.log(val);
+          // split_all.forEach((str, i) => {
+          //   let temp = [];
+          //   if (isNaN(Number(str))) {
+          //     //数値でない
+          //     if (i > 2 && temp.length !== 0) {
+          //       numArry.push(this.helper._cp(temp.concat()));
+          //       temp = [];
+          //     }
+          //   } else {
+          //     //数値
+          //     temp.push(str);
+          //     console.log("temp", temp);
+          //   }
+          // });
+          // console.log("2", numArry);
           return val.split("	").map((num, i) => {
             if (i === 0) return Number(num) * unitV;
             else if (i === 1) return Number(num) * unitA;
@@ -971,6 +1008,7 @@ export default {
             }
           });
         });
+        // console.log("rawTextData2", rawTextData);
 
         rawTextData = rawTextData.filter((val) => {
           let checkNaN = val.find((item) => {
@@ -1034,6 +1072,7 @@ export default {
     ////////////////////////////
     onChangeGasType(selectVal) {
       // console.log("selectVal:", selectVal);
+      this.cons.currentGas = selectVal;
       if (selectVal === "Other") {
         this.isOtherGasType = true;
         this.cons.massAtom = Number(1e-26);
@@ -1539,6 +1578,7 @@ export default {
         console.log("[Result] isat_act", Math.abs(isat).toPrecision(4));
         return Math.abs(isat);
       };
+      let that = this;
       let func_setLeastLineObj = function(leastLineObj_input) {
         /**
          * //this->TeObj
@@ -1546,11 +1586,12 @@ export default {
          * from,toの値をGUIで変更した際に再計算するために呼び出される
          *
          */
-
+        let area = that.cons.probeArea;
         //変更を更新
         this.isatData_leastLineObj = leastLineObj_input;
         this.diffData_leastLineObj = leastLineObj_input;
         this.isat = calcIsat_realTime(leastLineObj_input);
+        this.Jsat = this.isat / area;
       };
 
       //create obj
@@ -1572,6 +1613,7 @@ export default {
         isatData_fromto_auto: diffData_fromto_auto,
         func_setLeastLineObj: func_setLeastLineObj, //function
         isat: calcIsat_realTime(leastLineObj_isat),
+        Jsat: calcIsat_realTime(leastLineObj_isat) / this.cons.probeArea,
       };
 
       // console.log("diffData_leastLineObj", outputObj.diffData_leastLineObj);
@@ -1769,9 +1811,17 @@ export default {
 
       let ne_isat =
         ((isat * 1e-3) /
-          (Math.exp(1 / 2) * e * area * 1e-4 * Math.sqrt((te * e) / mi))) *
+          (Math.exp(-1 / 2) * e * area * 1e-4 * Math.sqrt((te * e) / mi))) *
         1e-6;
+      //NE=(((Io*1E-3)/(PROS))*(1/(0.6*E))*pow((MI/(TE*E)),0.5))*1E-6;
+      // let ne_test =
+      //   ((isat * 1e-3) / (area * 1e-4)) *
+      //   (1 / (0.6 * e)) *
+      //   Math.pow(mi / (te * e), 0.5) *
+      //   1e-6;
+
       console.log("[Result] ne_isat", ne_isat.toPrecision(4));
+      // console.log("[Result] ne_test", ne_test.toPrecision(4));
 
       //create obj
       let NeObj = {
