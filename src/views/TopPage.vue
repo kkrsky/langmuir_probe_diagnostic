@@ -972,9 +972,34 @@ export default {
       //
       // console.log(unitV, unitA);
       rawTextData = rawTextData.trim().split("\n");
-
+      // console.log("rawTextData", rawTextData);
       try {
         rawTextData = rawTextData.map((val) => {
+          // console.log("val", val.split(" "));
+          // let splited = val.split("	");
+          // console.log("1", splited);
+
+          // if (splited.length <= 1) val.split("	");
+          // if (splited.length <= 1) val.split("  ");
+
+          // let split_all = val.split("");
+          // let numArry = [];
+          // console.log(val);
+          // split_all.forEach((str, i) => {
+          //   let temp = [];
+          //   if (isNaN(Number(str))) {
+          //     //数値でない
+          //     if (i > 2 && temp.length !== 0) {
+          //       numArry.push(this.helper._cp(temp.concat()));
+          //       temp = [];
+          //     }
+          //   } else {
+          //     //数値
+          //     temp.push(str);
+          //     console.log("temp", temp);
+          //   }
+          // });
+          // console.log("2", numArry);
           return val.split("	").map((num, i) => {
             if (i === 0) return Number(num) * unitV;
             else if (i === 1) return Number(num) * unitA;
@@ -983,6 +1008,7 @@ export default {
             }
           });
         });
+        // console.log("rawTextData2", rawTextData);
 
         rawTextData = rawTextData.filter((val) => {
           let checkNaN = val.find((item) => {
@@ -1553,7 +1579,7 @@ export default {
         return Math.abs(isat);
       };
       let that = this;
-      let func_setLeastLineObj = function (leastLineObj_input) {
+      let func_setLeastLineObj = function(leastLineObj_input) {
         /**
          * //this->TeObj
           // console.log(this);
@@ -1750,7 +1776,7 @@ export default {
 
       Te = calcTe_realTime(leastLineObj_Te);
 
-      let func_setLeastLineObj = function (leastLineObj_input) {
+      let func_setLeastLineObj = function(leastLineObj_input) {
         /**
          * //this->TeObj
           // console.log(this);
