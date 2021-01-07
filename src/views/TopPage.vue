@@ -1306,7 +1306,6 @@ export default {
         return acc[1] < val[1] ? acc : val;
       });
       // console.log("dataArry", dataArry);
-      console.log("dataArry", dataArry);
       let limitDot_start = dataArry.find((dot) => {
         return dot[1] !== null;
       });
@@ -1382,7 +1381,25 @@ export default {
       // console.log("checkVoltArry", checkVoltArry);
       let { a, b } = this.leastSquareMethod(checkVoltArry);
       let meanFloatVolt = this.calcLinerPoint({ a, b, y: 0 });
+      let minVolt = checkVoltArry[0][0];
+      let maxVolt = checkVoltArry.slice(-1)[0][0];
 
+      if (minVolt > meanFloatVolt || maxVolt < meanFloatVolt || a < 0) {
+        console.error(
+          "calcVf:",
+          meanFloatVolt,
+          minVolt > meanFloatVolt,
+          maxVolt < meanFloatVolt,
+          a < 0
+        );
+        let voltList = checkVoltArry.map((dot) => {
+          return dot[0];
+        });
+        let sumVolt = voltList.reduce((acc, val) => {
+          return (acc += val);
+        });
+        meanFloatVolt = sumVolt / checkVoltArry.length;
+      }
       //理論計算からVfを算出
       let Vf_calc = null;
       if (TeObj) {
@@ -1671,13 +1688,14 @@ export default {
       let floatVolt = VfObj.Vf_act;
       // console.log("formatTextArry", formatTextArry);
       let IiObj = isatDataObj.isatData_leastLineObj;
-      let Ie = formatTextArry.map((dot) => {
+      let IeArry = formatTextArry.map((dot) => {
         let [cV, cI] = dot;
         let Ii = IiObj.a_coord * cV + IiObj.b_coord;
         let Ie = cI - Ii;
         return [cV, Ie];
       });
-      let logIe_arry = Ie.map((dot) => {
+      // console.log("IeArry", IeArry);
+      let logIe_arry = IeArry.map((dot) => {
         let [cV, Ie] = dot;
         let threshold = 5; //Vfー5V~最大値の部分のみ有効
 
@@ -1788,6 +1806,7 @@ export default {
           return findGoodTePoint_recur(obj);
         }
       };
+      // console.log("logIe_arry", logIe_arry);
       let lsmObj = {
         endLoop: false,
         result: null,
@@ -1797,6 +1816,7 @@ export default {
         a_coord_maxObj: null,
 
         //set
+
         floatVolt,
         originArry: logIe_arry,
         lineLength: Math.floor(logIe_arry.length * 0.05), //検証するユニットデータ点数
