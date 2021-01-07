@@ -405,10 +405,10 @@ export default {
         displayGraphList: ["V-Ip"], //initDisplayGraphListで自動生成
         displayGraphListObj: {
           V_Ip: { graphType: "V-Ip" },
+          V_Iis: { graphType: "V-Iis" },
           V_LogIe: { graphType: "V-Log(Ie)" },
           Vp_dIpdVp: { graphType: "Vp-dIp/dVp" },
           Vp_ddIp: { graphType: "Vp-ddIp" },
-          V_Iis: { graphType: "V-Iis" },
           test: { graphType: "test" },
         },
         state: {

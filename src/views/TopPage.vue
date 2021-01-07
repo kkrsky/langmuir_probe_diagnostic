@@ -623,7 +623,7 @@ export default {
         readerArry[i] = new FileReader();
         readerArry[i].cnt = i;
         let readFileEnd = readerArry[files.length - 1];
-        readerArry[i].onload = (e, i) => {
+        readerArry[i].onload = (e) => {
           //text format
           let isSame = isSameFile(currentFile.name);
           if (isSame) {
@@ -682,6 +682,7 @@ export default {
                 id = maxIdObj.id + 1;
               }
               let file = {
+                load_i: i,
                 id: id,
                 attribute: attribute,
                 name: name,
@@ -706,6 +707,12 @@ export default {
 
               if (readFileEnd) {
                 //最後のファイルが読み込まれた
+                this.files.sort((nv, cv) => {
+                  let nv_load = nv.load_i;
+                  let cv_load = cv.load_i;
+                  // return cv_load - nv_load;
+                  return nv_load - cv_load; //昇順
+                });
                 this.loadingHandler({ type: "end" });
               }
             } else {
