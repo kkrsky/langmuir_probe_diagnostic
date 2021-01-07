@@ -379,6 +379,7 @@ export default {
                 diffData_leastLineObj: null,
                 Vs_calc: null,
               },
+              reload: 0,
             },
             chartName: null,
             labelName: null,
@@ -404,10 +405,10 @@ export default {
         displayGraphList: ["V-Ip"], //initDisplayGraphListで自動生成
         displayGraphListObj: {
           V_Ip: { graphType: "V-Ip" },
+          V_Iis: { graphType: "V-Iis" },
           V_LogIe: { graphType: "V-Log(Ie)" },
           Vp_dIpdVp: { graphType: "Vp-dIp/dVp" },
           Vp_ddIp: { graphType: "Vp-ddIp" },
-          V_Iis: { graphType: "V-Iis" },
           test: { graphType: "test" },
         },
         state: {
@@ -773,12 +774,14 @@ export default {
       // }, 10);
     },
     initGraph_V_Ip({ graphType }) {
+      let chartName =
+        this.file.name + "_" + this.file.id + "_" + this.file.reload;
       let createChartObj = {
         graphType,
         data: {
           file: this.file,
-          chartName: this.file.name,
-          labelName: this.file.name,
+          chartName: chartName,
+          labelName: chartName,
           setDataArry: this.file.scatterData,
           addLineObj_Isat: this.file.isatDataObj.isatData_leastLineObj,
           addLineObj_Te: this.file.TeObj.logIe_leastLineObj,
@@ -1048,7 +1051,11 @@ export default {
     updateResult() {
       let presenter = (obj) => {
         for (let key in obj) {
-          obj[key].data = obj[key].data.toPrecision(4);
+          try {
+            obj[key].data = obj[key].data.toPrecision(4);
+          } catch {
+            //none
+          }
         }
         // console.log(obj);
         return obj;

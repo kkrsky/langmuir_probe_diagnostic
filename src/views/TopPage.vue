@@ -56,7 +56,7 @@
           >
             <!-- <chart-container :files="files"></chart-container> -->
 
-            <div v-for="file in files" :key="file.id">
+            <div v-for="file in files" :key="file.reload">
               <chart-container
                 :file="file"
                 @changeFrom="setChange('from', $event, file)"
@@ -165,6 +165,9 @@
                   outlined
                   :disabled="!isOtherGasType"
                 ></v-text-field>
+              </v-col>
+              <v-col cols="2" class="updateGraph">
+                <v-btn @click="onUpdateGraph">更新</v-btn>
               </v-col>
             </v-row>
           </v-container>
@@ -564,6 +567,40 @@ export default {
       console.log("--------------------");
       console.log(currentFile.name);
     },
+    calcFileParams({ type, rawData, currentFile }) {
+      switch (type) {
+        case "init": {
+          //未実装
+          break;
+        }
+        case "reload": {
+          //cons.probeArea
+          //cons.massAtom
+          //が変更された時に更新する
+          //getter
+          let chartName = currentFile.name;
+          let formatTextArry = currentFile.formatText;
+          let isatDataObj = currentFile.isatDataObj;
+          let TeObj = currentFile.TeObj;
+          //update
+
+          //massAtom
+          let VfObj = this.calcVf({ formatTextArry, TeObj });
+          let VsObj = this.calcVs({ formatTextArry, VfObj, TeObj });
+
+          //probeArea
+          let NeObj = this.calcNe({ isatDataObj, TeObj });
+          let Jsat = isatDataObj.isat / this.cons.probeArea;
+
+          currentFile.VfObj = VfObj;
+          currentFile.NeObj = NeObj;
+          currentFile.VsObj = VsObj;
+          currentFile.isatDataObj.Jsat = Jsat;
+          return currentFile;
+          break;
+        }
+      }
+    },
     onInputFiles(event) {
       const files = event.target.files;
       let readerArry = [];
@@ -586,7 +623,7 @@ export default {
         readerArry[i] = new FileReader();
         readerArry[i].cnt = i;
         let readFileEnd = readerArry[files.length - 1];
-        readerArry[i].onload = (e, i) => {
+        readerArry[i].onload = (e) => {
           //text format
           let isSame = isSameFile(currentFile.name);
           if (isSame) {
@@ -645,6 +682,7 @@ export default {
                 id = maxIdObj.id + 1;
               }
               let file = {
+                load_i: i,
                 id: id,
                 attribute: attribute,
                 name: name,
@@ -658,6 +696,7 @@ export default {
                 NeObj,
                 VsObj,
                 debyLength,
+                reload: id,
               };
 
               this.$store.dispatch("main/initChartList", {
@@ -668,6 +707,12 @@ export default {
 
               if (readFileEnd) {
                 //最後のファイルが読み込まれた
+                this.files.sort((nv, cv) => {
+                  let nv_load = nv.load_i;
+                  let cv_load = cv.load_i;
+                  // return cv_load - nv_load;
+                  return nv_load - cv_load; //昇順
+                });
                 this.loadingHandler({ type: "end" });
               }
             } else {
@@ -1094,6 +1139,13 @@ export default {
         }
       }
     },
+    onUpdateGraph() {
+      this.files.forEach((file) => {
+        file = this.calcFileParams({ type: "reload", currentFile: file });
+        file.reload++;
+      });
+      console.log("update", this.files);
+    },
 
     ////////////////////////////
     //Top calc data
@@ -1336,7 +1388,26 @@ export default {
       // console.log("checkVoltArry", checkVoltArry);
       let { a, b } = this.leastSquareMethod(checkVoltArry);
       let meanFloatVolt = this.calcLinerPoint({ a, b, y: 0 });
+      let minVolt = checkVoltArry[0][0];
+      let maxVolt = checkVoltArry.slice(-1)[0][0];
 
+      if (minVolt > meanFloatVolt || maxVolt < meanFloatVolt || a < 0) {
+        console.error(
+          "calcVf:",
+          meanFloatVolt,
+          minVolt > meanFloatVolt,
+          maxVolt < meanFloatVolt,
+          a < 0
+        );
+        console.log("checkVoltArry", checkVoltArry);
+        let voltList = checkVoltArry.map((dot) => {
+          return dot[0];
+        });
+        let sumVolt = voltList.reduce((acc, val) => {
+          return (acc += val);
+        });
+        meanFloatVolt = sumVolt / checkVoltArry.length;
+      }
       //理論計算からVfを算出
       let Vf_calc = null;
       if (TeObj) {
@@ -1363,48 +1434,48 @@ export default {
 
       //y軸増加分を計算
       let diffObjArry_y = this.calcDiff_y(calcRange);
+      let diffObjArry_y_output = diffObjArry_y;
+      // //エラー部分を除去 (次の点と比較して今の点が10倍以上異なる場合は除去)
+      // let diffObjArry_y_output = diffObjArry_y.filter((dotObj, i) => {
+      //   if (i < diffObjArry_y.length - 1) {
+      //     let [cx, cy] = dotObj.data;
+      //     let [nx, ny] = diffObjArry_y[i + 1].data;
+      //     let threshold = 10;
 
-      //エラー部分を除去 (次の点と比較して今の点が10倍以上異なる場合は除去)
-      let diffObjArry_y_output = diffObjArry_y.filter((dotObj, i) => {
-        if (i < diffObjArry_y.length - 1) {
-          let [cx, cy] = dotObj.data;
-          let [nx, ny] = diffObjArry_y[i + 1].data;
-          let threshold = 10;
+      //     if (
+      //       Math.abs(cy / ny) > threshold ||
+      //       Math.abs(cy / ny) < 1 / threshold
+      //     ) {
+      //       return false;
+      //     } else {
+      //       return true;
+      //     }
+      //   } else {
+      //     return false;
+      //   }
+      // });
 
-          if (
-            Math.abs(cy / ny) > threshold ||
-            Math.abs(cy / ny) < 1 / threshold
-          ) {
-            return false;
-          } else {
-            return true;
-          }
-        } else {
-          return false;
-        }
-      });
+      // //極端なエラー値を除いたデータの平均算出
+      // let calcAveArry = diffObjArry_y_output.map((dotObj) => {
+      //   return dotObj.data[1];
+      // });
+      // let diffAverage =
+      //   calcAveArry.slice().reduce((acc, val) => {
+      //     return (acc += val);
+      //   }) / diffObjArry_y_output.length;
+      // // console.log("diffAverage", diffAverage);
 
-      //極端なエラー値を除いたデータの平均算出
-      let calcAveArry = diffObjArry_y_output.map((dotObj) => {
-        return dotObj.data[1];
-      });
-      let diffAverage =
-        calcAveArry.slice().reduce((acc, val) => {
-          return (acc += val);
-        }) / diffObjArry_y_output.length;
-      // console.log("diffAverage", diffAverage);
-
-      //エラー除去②、平均よりも10倍以上高い場合は除去
-      diffObjArry_y_output = diffObjArry_y_output.filter((dotObj, i) => {
-        let [cx, cy] = dotObj.data;
-        let threshold = 10;
-        if (
-          Math.abs(cy / diffAverage) > threshold ||
-          Math.abs(cy / diffAverage) < 1 / threshold
-        )
-          return false;
-        else return true;
-      });
+      // //エラー除去②、平均よりも10倍以上高い場合は除去
+      // diffObjArry_y_output = diffObjArry_y_output.filter((dotObj, i) => {
+      //   let [cx, cy] = dotObj.data;
+      //   let threshold = 10;
+      //   if (
+      //     Math.abs(cy / diffAverage) > threshold ||
+      //     Math.abs(cy / diffAverage) < 1 / threshold
+      //   )
+      //     return false;
+      //   else return true;
+      // });
       //エラー除去②、平均よりも10倍以上高い場合は平均値に置換(微分とV-Iisグラフの番号が異なる問題を解決)
       // diff_y_output = diff_y.slice().map((dot) => {
       //   let [ci, cy] = dot;
@@ -1422,6 +1493,101 @@ export default {
 
       //平均二乗法によって傾き調整 (微分値なので単調増加の場合、傾きが０に近づけば良い、傾きが閾値以下になるまで計算)
       let findGoodIsatPoint_recur = (obj) => {
+        if (obj.endLoop) {
+          //傾きが閾値以下になった。
+          //開始位置の微調整
+
+          return obj.result; //obj.leastLineObj;
+        } else {
+          // let leastLineObj_min = obj.leastLineObj_min;
+          //init leastLineObj
+          if (obj.leastLineObj === null && obj.from === null) {
+            obj.leastLineObj = this.createLeastSquareMethodLine({
+              originArry: obj.originArry,
+              isExtendLine: false,
+            });
+            obj.leastLineObj_min = this.helper._cp(obj.leastLineObj);
+          } else if (obj.from !== null && obj.to !== null) {
+            obj.leastLineObj = this.createLeastSquareMethodLine({
+              originArry: obj.originArry,
+              from: obj.from,
+              to: obj.to,
+              isExtendLine: false,
+            });
+            obj.leastLineObj_min = obj.leastLineObj;
+          }
+          //開始位置の微調整
+          if (obj.startAverage === null && obj.from === null) {
+            //開始付近の平均算出
+            let threshold = 0.05; //データ総点数の5%を始点付近とする
+            // let maxStartIndex = Math.floor(obj.originArry.length * threshold);
+            let maxStartIndex = 5;
+            let startDataList = obj.originArry.slice(0, maxStartIndex);
+            let sum = startDataList.slice().reduce((acc, val) => {
+              acc[1] += val[1];
+              return acc;
+            })[1];
+            let startAverage = sum / maxStartIndex;
+            // console.log("startAverage", startAverage);
+            // console.log("maxStartIndex", maxStartIndex);
+            // console.log("sum", sum);
+            // console.log("startDataList", startDataList);
+            //スタートポイント算出
+            let minVal = 1;
+            let minIndex = 0;
+            startDataList.forEach((dot, i) => {
+              let [cx, cy] = dot;
+              let diff = Math.abs(cy - startAverage);
+              if (minVal > diff) {
+                minVal = diff;
+                minIndex = i;
+              }
+            });
+            //setter
+            // console.log("min", minArry, "minVal", minVal);
+            obj.startAverage = startAverage;
+            obj.leastLineObj.from = minIndex + 1; //minArry[0]はindex
+          }
+
+          //check a_coord
+          // console.log(
+          //   "a",
+          //   obj.leastLineObj_min.a_coord,
+          //   obj.leastLineObj.a_coord
+          // );
+          if (
+            Math.abs(obj.leastLineObj_min.a_coord) >
+            Math.abs(obj.leastLineObj.a_coord)
+          ) {
+            obj.leastLineObj_min = this.helper._cp(obj.leastLineObj);
+          }
+
+          // console.log(obj.leastLineObj.a_coord, obj.a_coord_threshold);
+          if (obj.cnt > obj.originArry.length / 2) {
+            // console.error("手動でイオン飽和電流を求めてください");
+            // obj.leastLineObj.error.isSuccess = false;
+            // obj.leastLineObj.error.message =
+            //   "手動でイオン飽和電流を求めてください";
+            obj.result = obj.leastLineObj_min;
+            obj.endLoop = true;
+          } else {
+            //toから1を引いて、再度最小二乗法を計算
+            let { from, to } = obj.leastLineObj;
+            to -= 1;
+            obj.leastLineObj = this.createLeastSquareMethodLine({
+              originArry: obj.originArry,
+              from,
+              to,
+              isExtendLine: false,
+            });
+            obj.endLoop = false;
+          }
+          // console.log("obj.endLoop", obj.endLoop);
+          obj.cnt++;
+          return findGoodIsatPoint_recur(obj);
+        }
+      };
+      let findGoodIsatPoint_recur_old = (obj) => {
         if (obj.endLoop) {
           //傾きが閾値以下になった。
           //開始位置の微調整
@@ -1518,7 +1684,7 @@ export default {
           }
           // console.log("obj.endLoop", obj.endLoop);
           obj.cnt++;
-          return findGoodIsatPoint_recur(obj);
+          return findGoodIsatPoint_recur_old(obj);
         }
       };
       let diffDataArry_y = diffObjArry_y_output.map((dotObj) => {
@@ -1528,6 +1694,7 @@ export default {
         endLoop: false,
         result: null,
         leastLineObj: null,
+        leastLineObj_min: null,
         startAverage: null,
         cnt: 0,
         // originArry: diff_y,
@@ -1625,13 +1792,14 @@ export default {
       let floatVolt = VfObj.Vf_act;
       // console.log("formatTextArry", formatTextArry);
       let IiObj = isatDataObj.isatData_leastLineObj;
-      let Ie = formatTextArry.map((dot) => {
+      let IeArry = formatTextArry.map((dot) => {
         let [cV, cI] = dot;
         let Ii = IiObj.a_coord * cV + IiObj.b_coord;
         let Ie = cI - Ii;
         return [cV, Ie];
       });
-      let logIe_arry = Ie.map((dot) => {
+      // console.log("IeArry", IeArry);
+      let logIe_arry = IeArry.map((dot) => {
         let [cV, Ie] = dot;
         let threshold = 5; //Vfー5V~最大値の部分のみ有効
 
@@ -1742,6 +1910,7 @@ export default {
           return findGoodTePoint_recur(obj);
         }
       };
+      // console.log("logIe_arry", logIe_arry);
       let lsmObj = {
         endLoop: false,
         result: null,
@@ -1751,6 +1920,7 @@ export default {
         a_coord_maxObj: null,
 
         //set
+
         floatVolt,
         originArry: logIe_arry,
         lineLength: Math.floor(logIe_arry.length * 0.05), //検証するユニットデータ点数
@@ -1995,6 +2165,10 @@ export default {
     padding: 10px 0;
     border: solid 1px #bbb;
     border-radius: 2%;
+    .updateGraph {
+      display: flex;
+      justify-content: center;
+    }
   }
 }
 </style>
