@@ -774,12 +774,14 @@ export default {
       // }, 10);
     },
     initGraph_V_Ip({ graphType }) {
+      let chartName =
+        this.file.name + "_" + this.file.id + "_" + this.file.reload;
       let createChartObj = {
         graphType,
         data: {
           file: this.file,
-          chartName: this.file.name,
-          labelName: this.file.name,
+          chartName: chartName,
+          labelName: chartName,
           setDataArry: this.file.scatterData,
           addLineObj_Isat: this.file.isatDataObj.isatData_leastLineObj,
           addLineObj_Te: this.file.TeObj.logIe_leastLineObj,
