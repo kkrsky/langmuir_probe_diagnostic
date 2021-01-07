@@ -1392,6 +1392,7 @@ export default {
           maxVolt < meanFloatVolt,
           a < 0
         );
+        console.log("checkVoltArry", checkVoltArry);
         let voltList = checkVoltArry.map((dot) => {
           return dot[0];
         });
@@ -1426,48 +1427,48 @@ export default {
 
       //y軸増加分を計算
       let diffObjArry_y = this.calcDiff_y(calcRange);
+      let diffObjArry_y_output = diffObjArry_y;
+      // //エラー部分を除去 (次の点と比較して今の点が10倍以上異なる場合は除去)
+      // let diffObjArry_y_output = diffObjArry_y.filter((dotObj, i) => {
+      //   if (i < diffObjArry_y.length - 1) {
+      //     let [cx, cy] = dotObj.data;
+      //     let [nx, ny] = diffObjArry_y[i + 1].data;
+      //     let threshold = 10;
 
-      //エラー部分を除去 (次の点と比較して今の点が10倍以上異なる場合は除去)
-      let diffObjArry_y_output = diffObjArry_y.filter((dotObj, i) => {
-        if (i < diffObjArry_y.length - 1) {
-          let [cx, cy] = dotObj.data;
-          let [nx, ny] = diffObjArry_y[i + 1].data;
-          let threshold = 10;
+      //     if (
+      //       Math.abs(cy / ny) > threshold ||
+      //       Math.abs(cy / ny) < 1 / threshold
+      //     ) {
+      //       return false;
+      //     } else {
+      //       return true;
+      //     }
+      //   } else {
+      //     return false;
+      //   }
+      // });
 
-          if (
-            Math.abs(cy / ny) > threshold ||
-            Math.abs(cy / ny) < 1 / threshold
-          ) {
-            return false;
-          } else {
-            return true;
-          }
-        } else {
-          return false;
-        }
-      });
+      // //極端なエラー値を除いたデータの平均算出
+      // let calcAveArry = diffObjArry_y_output.map((dotObj) => {
+      //   return dotObj.data[1];
+      // });
+      // let diffAverage =
+      //   calcAveArry.slice().reduce((acc, val) => {
+      //     return (acc += val);
+      //   }) / diffObjArry_y_output.length;
+      // // console.log("diffAverage", diffAverage);
 
-      //極端なエラー値を除いたデータの平均算出
-      let calcAveArry = diffObjArry_y_output.map((dotObj) => {
-        return dotObj.data[1];
-      });
-      let diffAverage =
-        calcAveArry.slice().reduce((acc, val) => {
-          return (acc += val);
-        }) / diffObjArry_y_output.length;
-      // console.log("diffAverage", diffAverage);
-
-      //エラー除去②、平均よりも10倍以上高い場合は除去
-      diffObjArry_y_output = diffObjArry_y_output.filter((dotObj, i) => {
-        let [cx, cy] = dotObj.data;
-        let threshold = 10;
-        if (
-          Math.abs(cy / diffAverage) > threshold ||
-          Math.abs(cy / diffAverage) < 1 / threshold
-        )
-          return false;
-        else return true;
-      });
+      // //エラー除去②、平均よりも10倍以上高い場合は除去
+      // diffObjArry_y_output = diffObjArry_y_output.filter((dotObj, i) => {
+      //   let [cx, cy] = dotObj.data;
+      //   let threshold = 10;
+      //   if (
+      //     Math.abs(cy / diffAverage) > threshold ||
+      //     Math.abs(cy / diffAverage) < 1 / threshold
+      //   )
+      //     return false;
+      //   else return true;
+      // });
       //エラー除去②、平均よりも10倍以上高い場合は平均値に置換(微分とV-Iisグラフの番号が異なる問題を解決)
       // diff_y_output = diff_y.slice().map((dot) => {
       //   let [ci, cy] = dot;
@@ -1485,6 +1486,101 @@ export default {
 
       //平均二乗法によって傾き調整 (微分値なので単調増加の場合、傾きが０に近づけば良い、傾きが閾値以下になるまで計算)
       let findGoodIsatPoint_recur = (obj) => {
+        if (obj.endLoop) {
+          //傾きが閾値以下になった。
+          //開始位置の微調整
+
+          return obj.result; //obj.leastLineObj;
+        } else {
+          // let leastLineObj_min = obj.leastLineObj_min;
+          //init leastLineObj
+          if (obj.leastLineObj === null && obj.from === null) {
+            obj.leastLineObj = this.createLeastSquareMethodLine({
+              originArry: obj.originArry,
+              isExtendLine: false,
+            });
+            obj.leastLineObj_min = this.helper._cp(obj.leastLineObj);
+          } else if (obj.from !== null && obj.to !== null) {
+            obj.leastLineObj = this.createLeastSquareMethodLine({
+              originArry: obj.originArry,
+              from: obj.from,
+              to: obj.to,
+              isExtendLine: false,
+            });
+            obj.leastLineObj_min = obj.leastLineObj;
+          }
+          //開始位置の微調整
+          if (obj.startAverage === null && obj.from === null) {
+            //開始付近の平均算出
+            let threshold = 0.05; //データ総点数の5%を始点付近とする
+            // let maxStartIndex = Math.floor(obj.originArry.length * threshold);
+            let maxStartIndex = 5;
+            let startDataList = obj.originArry.slice(0, maxStartIndex);
+            let sum = startDataList.slice().reduce((acc, val) => {
+              acc[1] += val[1];
+              return acc;
+            })[1];
+            let startAverage = sum / maxStartIndex;
+            // console.log("startAverage", startAverage);
+            // console.log("maxStartIndex", maxStartIndex);
+            // console.log("sum", sum);
+            // console.log("startDataList", startDataList);
+            //スタートポイント算出
+            let minVal = 1;
+            let minIndex = 0;
+            startDataList.forEach((dot, i) => {
+              let [cx, cy] = dot;
+              let diff = Math.abs(cy - startAverage);
+              if (minVal > diff) {
+                minVal = diff;
+                minIndex = i;
+              }
+            });
+            //setter
+            // console.log("min", minArry, "minVal", minVal);
+            obj.startAverage = startAverage;
+            obj.leastLineObj.from = minIndex + 1; //minArry[0]はindex
+          }
+
+          //check a_coord
+          // console.log(
+          //   "a",
+          //   obj.leastLineObj_min.a_coord,
+          //   obj.leastLineObj.a_coord
+          // );
+          if (
+            Math.abs(obj.leastLineObj_min.a_coord) >
+            Math.abs(obj.leastLineObj.a_coord)
+          ) {
+            obj.leastLineObj_min = this.helper._cp(obj.leastLineObj);
+          }
+
+          // console.log(obj.leastLineObj.a_coord, obj.a_coord_threshold);
+          if (obj.cnt > obj.originArry.length / 2) {
+            // console.error("手動でイオン飽和電流を求めてください");
+            // obj.leastLineObj.error.isSuccess = false;
+            // obj.leastLineObj.error.message =
+            //   "手動でイオン飽和電流を求めてください";
+            obj.result = obj.leastLineObj_min;
+            obj.endLoop = true;
+          } else {
+            //toから1を引いて、再度最小二乗法を計算
+            let { from, to } = obj.leastLineObj;
+            to -= 1;
+            obj.leastLineObj = this.createLeastSquareMethodLine({
+              originArry: obj.originArry,
+              from,
+              to,
+              isExtendLine: false,
+            });
+            obj.endLoop = false;
+          }
+          // console.log("obj.endLoop", obj.endLoop);
+          obj.cnt++;
+          return findGoodIsatPoint_recur(obj);
+        }
+      };
+      let findGoodIsatPoint_recur_old = (obj) => {
         if (obj.endLoop) {
           //傾きが閾値以下になった。
           //開始位置の微調整
@@ -1581,7 +1677,7 @@ export default {
           }
           // console.log("obj.endLoop", obj.endLoop);
           obj.cnt++;
-          return findGoodIsatPoint_recur(obj);
+          return findGoodIsatPoint_recur_old(obj);
         }
       };
       let diffDataArry_y = diffObjArry_y_output.map((dotObj) => {
@@ -1591,6 +1687,7 @@ export default {
         endLoop: false,
         result: null,
         leastLineObj: null,
+        leastLineObj_min: null,
         startAverage: null,
         cnt: 0,
         // originArry: diff_y,
