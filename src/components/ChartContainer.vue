@@ -379,6 +379,7 @@ export default {
                 diffData_leastLineObj: null,
                 Vs_calc: null,
               },
+              reload: 0,
             },
             chartName: null,
             labelName: null,
@@ -1048,7 +1049,11 @@ export default {
     updateResult() {
       let presenter = (obj) => {
         for (let key in obj) {
-          obj[key].data = obj[key].data.toPrecision(4);
+          try {
+            obj[key].data = obj[key].data.toPrecision(4);
+          } catch {
+            //none
+          }
         }
         // console.log(obj);
         return obj;

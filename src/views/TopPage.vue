@@ -56,7 +56,7 @@
           >
             <!-- <chart-container :files="files"></chart-container> -->
 
-            <div v-for="file in files" :key="file.id">
+            <div v-for="file in files" :key="file.reload">
               <chart-container
                 :file="file"
                 @changeFrom="setChange('from', $event, file)"
@@ -165,6 +165,9 @@
                   outlined
                   :disabled="!isOtherGasType"
                 ></v-text-field>
+              </v-col>
+              <v-col cols="2" class="updateGraph">
+                <v-btn @click="onUpdateGraph">更新</v-btn>
               </v-col>
             </v-row>
           </v-container>
@@ -564,6 +567,40 @@ export default {
       console.log("--------------------");
       console.log(currentFile.name);
     },
+    calcFileParams({ type, rawData, currentFile }) {
+      switch (type) {
+        case "init": {
+          //未実装
+          break;
+        }
+        case "reload": {
+          //cons.probeArea
+          //cons.massAtom
+          //が変更された時に更新する
+          //getter
+          let chartName = currentFile.name;
+          let formatTextArry = currentFile.formatText;
+          let isatDataObj = currentFile.isatDataObj;
+          let TeObj = currentFile.TeObj;
+          //update
+
+          //massAtom
+          let VfObj = this.calcVf({ formatTextArry, TeObj });
+          let VsObj = this.calcVs({ formatTextArry, VfObj, TeObj });
+
+          //probeArea
+          let NeObj = this.calcNe({ isatDataObj, TeObj });
+          let Jsat = isatDataObj.isat / this.cons.probeArea;
+
+          currentFile.VfObj = VfObj;
+          currentFile.NeObj = NeObj;
+          currentFile.VsObj = VsObj;
+          currentFile.isatDataObj.Jsat = Jsat;
+          return currentFile;
+          break;
+        }
+      }
+    },
     onInputFiles(event) {
       const files = event.target.files;
       let readerArry = [];
@@ -658,6 +695,7 @@ export default {
                 NeObj,
                 VsObj,
                 debyLength,
+                reload: id,
               };
 
               this.$store.dispatch("main/initChartList", {
@@ -1094,6 +1132,13 @@ export default {
         }
       }
     },
+    onUpdateGraph() {
+      this.files.forEach((file) => {
+        file = this.calcFileParams({ type: "reload", currentFile: file });
+        file.reload++;
+      });
+      console.log("update", this.files);
+    },
 
     ////////////////////////////
     //Top calc data
@@ -1261,6 +1306,7 @@ export default {
         return acc[1] < val[1] ? acc : val;
       });
       // console.log("dataArry", dataArry);
+      console.log("dataArry", dataArry);
       let limitDot_start = dataArry.find((dot) => {
         return dot[1] !== null;
       });
@@ -1995,6 +2041,10 @@ export default {
     padding: 10px 0;
     border: solid 1px #bbb;
     border-radius: 2%;
+    .updateGraph {
+      display: flex;
+      justify-content: center;
+    }
   }
 }
 </style>
