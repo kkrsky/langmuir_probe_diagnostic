@@ -362,6 +362,7 @@ export default {
                 isatData_scatter: null,
                 isatData_leastLineObj: null,
                 isat: null,
+                Jsat: null,
               },
               TeObj: {
                 logIe_arry: null,
@@ -450,12 +451,16 @@ export default {
           label: "Vf_fit [V]",
           data: 0,
         },
-        Vf_calc: {
-          label: "Vf_calc [V]",
-          data: 0,
-        },
+        // Vf_calc: {
+        //   label: "Vf_calc [V]",
+        //   data: 0,
+        // },
         λde: {
           label: "Deby Leng [mm]",
+          data: 0,
+        },
+        Jis: {
+          label: "Jis [mA/cm^2]",
           data: 0,
         },
       },
@@ -1090,15 +1095,18 @@ export default {
           label: "Vf_fit [V]",
           data: file.VfObj.Vf_act,
         },
-        Vf_calc: {
-          label: "Vf_calc [V]",
-          data: file.VfObj.Vf_calc,
-        },
+        // Vf_calc: {
+        //   label: "Vf_calc [V]",
+        //   data: file.VfObj.Vf_calc,
+        // },
         λde: {
           label: "Deby Leng [mm]",
           data: file.debyLength,
         },
-
+        Jis: {
+          label: "Jis [mA/cm^2]",
+          data: file.isatDataObj.Jsat,
+        },
         // reload: 0,
       };
       this.resultObj.env.isInit = true;
