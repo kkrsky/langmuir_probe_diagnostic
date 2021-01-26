@@ -1152,6 +1152,41 @@ export default {
     ////////////////////////////
     //init
     //utils
+    linearRegression2(coordinates) {
+      let y = coordinates.map((val) => {
+        return val[1];
+      });
+      let x = coordinates.map((val) => {
+        return val[0];
+      });
+      var lr = {};
+      var n = y.length;
+      var sum_x = 0;
+      var sum_y = 0;
+      var sum_xy = 0;
+      var sum_xx = 0;
+      var sum_yy = 0;
+
+      for (var i = 0; i < y.length; i++) {
+        sum_x += x[i];
+        sum_y += y[i];
+        sum_xy += x[i] * y[i];
+        sum_xx += x[i] * x[i];
+        sum_yy += y[i] * y[i];
+      }
+
+      lr["slope"] = (n * sum_xy - sum_x * sum_y) / (n * sum_xx - sum_x * sum_x);
+      lr["intercept"] = (sum_y - lr.slope * sum_x) / n;
+      lr["r2"] = Math.pow(
+        (n * sum_xy - sum_x * sum_y) /
+          Math.sqrt(
+            (n * sum_xx - sum_x * sum_x) * (n * sum_yy - sum_y * sum_y)
+          ),
+        2
+      );
+
+      return lr;
+    },
     leastSquareMethod(coordinates) {
       /**
        * @param {Object} coordinates [{x:0,y:0},...] or [[0,0],...]
@@ -1356,50 +1391,168 @@ export default {
        */
 
       //VIから浮遊電位を計算
-      let maxLoop = formatTextArry.length;
-      let checkVoltArry = [];
-      for (let i = 0; i < maxLoop; i++) {
-        let [cx, cy] = formatTextArry[i];
-        let isFirstData = true;
+      let top = {
+        originArry: [],
+        checkVoltArry: [],
+        currentY: 0,
+        meanFloatVolt: 0,
+        //setting
+        threshold_currentRate: 1.5, //増加率が１０以上
+        threshold_maxY: 0.6, // 電流の絶対値が0.6以下のものを正しい数値とする
+        threshold_diffVolt: 2.5, //平均から電圧の差が＋ー2.5V以上ある場合はエラーとみなす
+        init({ originArry }) {
+          this.originArry = originArry;
+        },
 
-        if (cy > 0) {
-          if (isFirstData) {
-            //最初のデータ
-            checkVoltArry.push([cx, cy]);
+        start() {
+          this.doCalc();
+          this.rmError_volt(this.checkVoltArry);
+          this.rmError_same();
+          this.calcMeanFloatVolt();
+          // this.printTest();
+        },
 
-            //これ以降でy軸が負となるデータを検出
-            for (let j = i + 1; j < maxLoop; j++) {
-              if (j === maxLoop - 1) break;
-              let [nx, ny] = formatTextArry[j];
-              let [nx2, ny2] = formatTextArry[j + 1];
-
-              if (ny < 0) {
-                checkVoltArry.push([nx, ny]);
-                if (ny2 > 0) checkVoltArry.push([nx2, ny2]);
+        doCalc() {
+          this.originArry.some((val, i, arr) => {
+            if (0 < i && i < arr.length - 2) {
+              let [bx, by] = arr[i - 1];
+              let [cx, cy] = val;
+              let [nx, ny] = arr[i + 1];
+              let ca_coord = (cy - by) / (cx - bx);
+              let na_coord = (ny - cy) / (nx - cx);
+              /* console.log('ca_coord',ca_coord,na_coord) */
+              if (Math.abs(cy) < this.threshold_maxY) {
+                if (
+                  Math.abs(ca_coord) > this.threshold_currentRate &&
+                  Math.abs(na_coord) > this.threshold_currentRate
+                ) {
+                  //飛び出てたデータを検出
+                  // console.log('except',[bx, by], [cx, cy]);
+                  //none
+                } else if (by < 0 && cy > 0) {
+                  this.checkVoltArry.push([bx, by]);
+                  this.checkVoltArry.push([cx, cy]);
+                  this.currentY = cy;
+                } else if (by > 0 && cy < 0) {
+                  if (by === this.currentY) this.checkVoltArry.push([cx, cy]);
+                  else {
+                    this.checkVoltArry.push([bx, by]);
+                    this.checkVoltArry.push([cx, cy]);
+                    this.currentY = cy;
+                  }
+                }
               }
             }
-            isFirstData = false;
-            break;
-          }
-        }
-        //初期データ用
-        checkVoltArry[0] = [cx, cy];
-      }
-      // console.log("checkVoltArry", checkVoltArry);
-      let { a, b } = this.leastSquareMethod(checkVoltArry);
-      let meanFloatVolt = this.calcLinerPoint({ a, b, y: 0 });
-      let minVolt = checkVoltArry[0][0];
-      let maxVolt = checkVoltArry.slice(-1)[0][0];
+          });
+        },
+        rmError_volt(checkVoltArry) {
+          //電圧の差でエラーを判別
+          let aveY =
+            checkVoltArry.reduce((acc, val) => {
+              acc[1] += val[1];
+              return acc;
+            })[1] / checkVoltArry.length;
+          let ascY = this._cp(checkVoltArry)
+            .map((val) => {
+              return [val[0], Math.abs(val[1])];
+            })
+            .sort((nv, cv) => {
+              return nv[1] - cv[1];
+            });
 
-      if (minVolt > meanFloatVolt || maxVolt < meanFloatVolt || a < 0) {
+          //より、y=０の線に近く電圧を昇順で並び替え
+          let aveY_asc_arry = ascY.slice(0, ascY.length / 2);
+          let aveY_asc =
+            aveY_asc_arry
+              .map((val) => {
+                return val[0];
+              })
+              .reduce((acc, val) => {
+                return (acc += val);
+              }) / aveY_asc_arry.length;
+
+          this.checkVoltArry = checkVoltArry.filter((val) => {
+            return (
+              aveY_asc - this.threshold_diffVolt < val[0] &&
+              val[0] < aveY_asc + this.threshold_diffVolt
+            );
+          });
+        },
+        rmError_same() {
+          let voltArry = this.checkVoltArry.map((val) => {
+            return val[0];
+          });
+          this.checkVoltArry = this.checkVoltArry.filter((val, i) => {
+            let notSame = voltArry.slice(i + 1).indexOf(val[0]) === -1;
+            return notSame;
+          });
+        },
+        calcMeanFloatVolt() {
+          let voltArry = this.checkVoltArry.map((val) => {
+            return val[0];
+          });
+          this.meanFloatVolt =
+            voltArry.reduce((acc, val) => {
+              return (acc += val);
+            }) / voltArry.length;
+        },
+        printTest() {
+          // console.log("checkVoltArry:", this.checkVoltArry);
+          this.checkVoltArry.forEach((val) => {
+            console.log(val[0] + " " + val[1]);
+          });
+        },
+        getCheckVoltArry() {
+          return this.checkVoltArry;
+        },
+        getMeanFloatVolt() {
+          return this.meanFloatVolt;
+        },
+        _cp(arr) {
+          return JSON.parse(JSON.stringify(arr));
+        },
+      };
+      top.init({ originArry: formatTextArry });
+      top.start();
+      let meanFloatVolt = top.getMeanFloatVolt();
+      let checkVoltArry = top.getCheckVoltArry();
+      // let { a, b } = this.leastSquareMethod(checkVoltArry);
+      // let meanFloatVolt = this.calcLinerPoint({ a, b, y: 0 });
+      let minVolt = 0;
+      let maxVolt = 1;
+      try {
+        minVolt = checkVoltArry.reduce((acc, val) => {
+          return acc[0] < val[0] ? acc : val;
+        })[0];
+        maxVolt = checkVoltArry.reduce((acc, val) => {
+          return acc[0] > val[0] ? acc : val;
+        })[0];
+      } catch {
+        this.helper.snackFire({
+          message:
+            "浮遊電位を正しく計算することができませんでした。このファイルを開発者に報告してください。",
+        });
+        return null;
+      }
+      console.log(
+        "checker",
+        minVolt,
+        "<",
+        meanFloatVolt,
+        "<",
+        maxVolt
+        // "a:",
+        // a
+      );
+      if (minVolt > meanFloatVolt || maxVolt < meanFloatVolt) {
         console.error(
           "calcVf:",
           meanFloatVolt,
           minVolt > meanFloatVolt,
-          maxVolt < meanFloatVolt,
-          a < 0
+          maxVolt < meanFloatVolt
+          // a < 0
         );
-        console.log("checkVoltArry", checkVoltArry);
+        // console.log("checkVoltArry", checkVoltArry);
         let voltList = checkVoltArry.map((dot) => {
           return dot[0];
         });
