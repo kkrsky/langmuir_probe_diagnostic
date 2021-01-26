@@ -173,6 +173,58 @@
           </v-container>
         </div>
       </v-card>
+      <v-card id="TopGraphParams" v-show="isShowDisplaySetting" outlined>
+        <div id="initParameter">
+          <h3>グラフ設定</h3>
+          <!-- <div class="mt-5"></div> -->
+          <v-container>
+            <v-row>
+              <v-col>
+                <v-text-field
+                  v-model="cons.probeArea"
+                  label="X軸最小"
+                  outlined
+                  clearable
+                ></v-text-field>
+              </v-col>
+              <v-col>
+                <v-text-field
+                  v-model="cons.probeArea"
+                  label="X軸最大"
+                  outlined
+                  clearable
+                ></v-text-field>
+              </v-col>
+
+              <v-col cols="2" class="updateGraph">
+                <v-btn @click="onUpdateGraph">更新</v-btn>
+              </v-col>
+            </v-row>
+            <v-row>
+              <v-col>
+                <v-text-field
+                  v-model="cons.probeArea"
+                  label="Y軸最小"
+                  outlined
+                  clearable
+                ></v-text-field>
+              </v-col>
+              <v-col>
+                <v-text-field
+                  v-model="cons.probeArea"
+                  label="Y軸最大"
+                  outlined
+                  clearable
+                ></v-text-field>
+              </v-col>
+
+              <v-col cols="2" class="updateGraph">
+                <v-checkbox @click="onUpdateGraph">Auto</v-checkbox>
+              </v-col>
+            </v-row>
+          </v-container>
+        </div>
+      </v-card>
     </v-main>
     <!-- <top-footer></top-footer> -->
   </div>
