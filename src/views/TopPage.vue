@@ -600,14 +600,14 @@ export default {
           //update
 
           //massAtom
-          let VfObj = this.calcVf({ formatTextArry, TeObj });
+          // let VfObj = this.calcVf({ formatTextArry, TeObj });
+          let VfObj = currentFile.VfObj;
           let VsObj = this.calcVs({ formatTextArry, VfObj, TeObj });
 
           //probeArea
           let NeObj = this.calcNe({ isatDataObj, TeObj });
           let Jsat = isatDataObj.isat / this.cons.probeArea;
 
-          currentFile.VfObj = VfObj;
           currentFile.NeObj = NeObj;
           currentFile.VsObj = VsObj;
           currentFile.isatDataObj.Jsat = Jsat;
@@ -1746,7 +1746,7 @@ export default {
                 Math.abs(na_coord) > threshold
               ) {
                 //飛び出している点を検出
-                console.error("remooved", dot);
+                // console.error("remooved", dot);
                 return false;
               } else {
                 return true;

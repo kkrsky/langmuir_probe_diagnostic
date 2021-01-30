@@ -1453,13 +1453,7 @@ export default {
               displayGraphListObj: this.display.displayGraphListObj,
               currentDisplayGraphObj: this.display.currentDisplayGraphObj,
             };
-            // let setToObj = {
-            //   changeValue: toVal,
-            //   displayGraphListObj: this.display.displayGraphListObj,
-            //   currentDisplayGraphObj: this.display.currentDisplayGraphObj,
-            // };
-            // console.log("before", fromVal, toVal);
-            // this.$emit("changeTo", setToObj);
+
             this.$emit("changeFrom", setFromObj);
             this.updateChart("hard");
           }
