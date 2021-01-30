@@ -951,7 +951,7 @@ export default {
       //その他環境情報を保存
       let envArry = [
         { label: "gasType", data: this.cons.currentGas },
-        { label: "systemVersion", data: "2.0" },
+        { label: "systemVersion", data: "2.5" },
         { label: "probeArea[cm^2]", data: this.cons.probeArea },
         { label: "massAtom", data: this.cons.massAtom },
       ];
