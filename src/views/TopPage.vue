@@ -173,7 +173,7 @@
           </v-container>
         </div>
       </v-card>
-      <v-card id="TopGraphParams" v-show="isShowDisplaySetting" outlined>
+      <v-card id="TopGraphParams" v-show="false" outlined>
         <div id="initParameter">
           <h3>グラフ設定</h3>
           <!-- <div class="mt-5"></div> -->
