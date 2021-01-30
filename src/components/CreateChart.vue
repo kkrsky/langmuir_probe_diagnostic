@@ -66,8 +66,15 @@ export default {
       addLineObj_Isat,
       addLineObj_Te,
       addGraphDataArry,
+      addDot,
+      chartOptions,
     }) {
       //canvas#"canvas-" + chartNameにグラフを描画
+      if (chartOptions) {
+        let { axis } = chartOptions;
+        this.createChart.axis = axis;
+      }
+
       let datasets = [
         {
           label: labelName,
@@ -190,6 +197,99 @@ export default {
         // console.log(addLine);
         datasets.unshift(addDatasetLineObj);
       }
+      if (addDot !== undefined) {
+        let addDotObj = {
+          label: "Dot",
+          data: addDot,
+          // backgroundColor: "RGBA(200,0,0, 1)",
+          borderColor: "rgba(200,0,0, 1)",
+          pointRadius: 4,
+          pointStyle: "circle",
+          // pointBackgroundColor: "RGBA(0,0,0, 1)",
+          pointHoverRadius: this.createChart.setting.point.hoverSize,
+          pointHitRadius: this.createChart.setting.point.pointHitRadius,
+          tension: 0,
+          showLine: true,
+          fill: false,
+          borderWidth: 1,
+        };
+        // console.log(addLine);
+        datasets.unshift(addDotObj);
+      }
+      let xAxes_here = null;
+      let yAxes_here = null;
+      if (false) {
+        xAxes_here = {
+          scaleLabel: {
+            display: true,
+            labelString: this.createChart.setting.axis.x.labelName,
+            fontSize: this.createChart.setting.fontSize.title,
+          },
+          ticks: {
+            fontSize: this.createChart.setting.fontSize.axis,
+
+            suggestedMin: this.createChart.setting.axis.x.maxSize,
+            suggestedMax: this.createChart.setting.axis.x.minSize,
+            stepSize: this.createChart.setting.axis.x.stepSize,
+            // callback: function(value, index, values) {
+            //   return value + "点";
+            // },
+          },
+        };
+
+        yAxes_here = {
+          scaleLabel: {
+            display: true,
+            labelString: this.createChart.setting.axis.y.labelName,
+            fontSize: this.createChart.setting.fontSize.title,
+          },
+          ticks: {
+            fontSize: this.createChart.setting.fontSize.axis,
+            min: 1,
+            max: -1,
+            stepSize: 0.5,
+            // callback: function(value, index, values) {
+            //   return value + "点";
+            // },
+          },
+        };
+      } else {
+        xAxes_here = {
+          scaleLabel: {
+            display: true,
+            labelString: this.createChart.setting.axis.x.labelName,
+            fontSize: this.createChart.setting.fontSize.title,
+          },
+          ticks: {
+            fontSize: this.createChart.setting.fontSize.axis,
+
+            suggestedMin: this.createChart.setting.axis.x.maxSize,
+            suggestedMax: this.createChart.setting.axis.x.minSize,
+
+            stepSize: this.createChart.setting.axis.x.stepSize,
+            // callback: function(value, index, values) {
+            //   return value + "点";
+            // },
+          },
+        };
+
+        yAxes_here = {
+          scaleLabel: {
+            display: true,
+            labelString: this.createChart.setting.axis.y.labelName,
+            fontSize: this.createChart.setting.fontSize.title,
+          },
+          ticks: {
+            fontSize: this.createChart.setting.fontSize.axis,
+            suggestedMin: this.createChart.setting.axis.y.maxSize,
+            suggestedMax: this.createChart.setting.axis.y.minSize,
+            stepSize: this.createChart.setting.axis.y.stepSize,
+            // callback: function(value, index, values) {
+            //   return value + "点";
+            // },
+          },
+        };
+      }
       //   console.log(chartName, labelName)
       let chartVI_ctx = window.document
         .getElementById("canvas-" + chartName)
@@ -206,42 +306,8 @@ export default {
             },
           },
           scales: {
-            xAxes: [
-              {
-                scaleLabel: {
-                  display: true,
-                  labelString: this.createChart.setting.axis.x.labelName,
-                  fontSize: this.createChart.setting.fontSize.title,
-                },
-                ticks: {
-                  fontSize: this.createChart.setting.fontSize.axis,
-                  suggestedMin: this.createChart.setting.axis.x.maxSize,
-                  suggestedMax: this.createChart.setting.axis.x.minSize,
-                  stepSize: this.createChart.setting.axis.x.stepSize,
-                  // callback: function(value, index, values) {
-                  //   return value + "点";
-                  // },
-                },
-              },
-            ],
-            yAxes: [
-              {
-                scaleLabel: {
-                  display: true,
-                  labelString: this.createChart.setting.axis.y.labelName,
-                  fontSize: this.createChart.setting.fontSize.title,
-                },
-                ticks: {
-                  fontSize: this.createChart.setting.fontSize.axis,
-                  suggestedMin: this.createChart.setting.axis.y.maxSize,
-                  suggestedMax: this.createChart.setting.axis.y.minSize,
-                  stepSize: this.createChart.setting.axis.y.stepSize,
-                  // callback: function(value, index, values) {
-                  //   return value + "点";
-                  // },
-                },
-              },
-            ],
+            xAxes: [xAxes_here],
+            yAxes: [yAxes_here],
           },
 
           tooltips: {

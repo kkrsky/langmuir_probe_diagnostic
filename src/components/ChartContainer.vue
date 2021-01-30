@@ -200,6 +200,35 @@
                   </v-textarea>
                 </v-col>
               </v-row>
+              <v-row v-if="display.state.isShowVf">
+                <v-col cols="4">
+                  <v-checkbox
+                    @click="onAutoLine('Vf')"
+                    v-model="isAutoLine_Vf"
+                    label="Auto Vf"
+                  >
+                  </v-checkbox>
+                </v-col>
+                <v-col>
+                  <v-textarea
+                    class="mx-2"
+                    label="from"
+                    rows="1"
+                    v-model.lazy="fromLine"
+                    prepend-icon="mdi-ray-start"
+                    :disabled="isAutoLine_Vf"
+                  >
+                    <template v-slot:append-outer>
+                      <v-btn icon color="primary"
+                        ><v-icon @click="fromLine += 0.1">mdi-plus</v-icon>
+                      </v-btn>
+                      <v-btn icon color="primary"
+                        ><v-icon @click="fromLine -= 0.1">mdi-minus</v-icon>
+                      </v-btn>
+                    </template>
+                  </v-textarea>
+                </v-col>
+              </v-row>
             </v-container>
           </div>
           <div class="result-container">
@@ -351,6 +380,8 @@ export default {
               VfObj: {
                 Vf_act: null,
                 Vf_calc: null,
+                VfDot: null,
+                Vf_scatter: null,
               },
               isatDataObj: {
                 //diff data
@@ -406,6 +437,7 @@ export default {
         displayGraphList: ["V-Ip"], //initDisplayGraphListで自動生成
         displayGraphListObj: {
           V_Ip: { graphType: "V-Ip" },
+          Vf_Ip: { graphType: "Vf-Ip" },
           V_Iis: { graphType: "V-Iis" },
           V_LogIe: { graphType: "V-Log(Ie)" },
           Vp_dIpdVp: { graphType: "Vp-dIp/dVp" },
@@ -415,12 +447,14 @@ export default {
         state: {
           isShowFromTo_Isat: false,
           isShowFromTo_Te: true,
+          isShowVf: false,
         },
 
         // displayGraphListObj: ["V-Ip", "V-Log(Ie)", "Vp-dIp/dVp", "V-Iis", "test"],
       },
       isAutoLine_Isat: true,
       isAutoLine_Te: true,
+      isAutoLine_Vf: true,
 
       resultObj: {
         env: {
@@ -481,6 +515,7 @@ export default {
           point: null,
           chartType: null,
         },
+
         reload: 0, //再描画用,再描画する際にインクリメントする
       },
     };
@@ -490,6 +525,7 @@ export default {
       // console.log(this.display.currentDisplayGraphObj.data);
       return this.display.currentDisplayGraphObj.data;
     },
+
     fromLine: {
       get() {
         switch (this.display.currentDisplayGraphObj.graphType) {
@@ -497,6 +533,12 @@ export default {
             //"V-Ip",
             return this.$props.file.TeObj.logIe_leastLineObj.from;
 
+            break;
+          }
+          case this.display.displayGraphListObj.Vf_Ip.graphType: {
+            //"Vf-Ip",
+            //浮遊電位を更新する用
+            return Number(this.$props.file.VfObj.Vf_act.toPrecision(4));
             break;
           }
           case this.display.displayGraphListObj.V_LogIe.graphType: {
@@ -535,6 +577,7 @@ export default {
         let fromOld = null;
         let toOld = null;
         let dataLength = null;
+        let passCheckError = false;
 
         switch (this.display.currentDisplayGraphObj.graphType) {
           case dgl.V_Ip.graphType: {
@@ -543,6 +586,15 @@ export default {
             fromOld = scope.logIe_leastLineObj.from;
             toOld = scope.logIe_leastLineObj.to;
             dataLength = scope.logIe_arry.length;
+            break;
+          }
+          case dgl.Vf_Ip.graphType: {
+            //"V-Ip",
+            let scope = this.$props.file.VfObj;
+            fromOld = scope.Vf_act;
+            // toOld = scope.logIe_leastLineObj.to;
+            dataLength = 1;
+            passCheckError = true;
             break;
           }
           case dgl.V_LogIe.graphType: {
@@ -586,7 +638,7 @@ export default {
         } else {
           fromVal = Number(fromVal);
         }
-        if (fromVal > toOld) {
+        if (fromVal > toOld && !passCheckError) {
           this.helper.snackFire({
             message: "fromはtoよりも小さい値を入力して下さい。",
           });
@@ -609,6 +661,12 @@ export default {
           case this.display.displayGraphListObj.V_Ip.graphType: {
             //"V-Ip",
             return this.$props.file.TeObj.logIe_leastLineObj.to;
+
+            break;
+          }
+          case this.display.displayGraphListObj.Vf_Ip.graphType: {
+            //"V-Ip",
+            // return this.$props.file.TeObj.logIe_leastLineObj.to;
 
             break;
           }
@@ -660,6 +718,14 @@ export default {
             toOld = scope.logIe_leastLineObj.to;
             dataLength = scope.logIe_arry.length;
             break;
+          }
+          case dgl.Vf_Ip.graphType: {
+            //"Vf-Ip",
+            // let scope = this.$props.file.TeObj;
+            // fromOld = scope.logIe_leastLineObj.from;
+            // toOld = scope.logIe_leastLineObj.to;
+            // dataLength = scope.logIe_arry.length;
+            // break;
           }
           case dgl.V_LogIe.graphType: {
             // "V-Log(Ie)",
@@ -808,7 +874,66 @@ export default {
       this.updateChart();
       return createChartObj;
     },
+    initGraph_Vf_Ip({ graphType }) {
+      // axis: {
+      //         y: {
+      //           labelName: "I [mA]",
+      //           stepSize: 10,
+      //           maxSize: null,
+      //           minSize: null,
+      //         },
+      //         x: {
+      //           labelName: "V [V]",
+      //           stepSize: 10,
+      //           maxSize: null,
+      //           minSize: null,
+      //         },
+      let axis_here = this.helper._cp(this.axis);
+      let minDot = this.file.VfObj.Vf_scatter[0];
+      let maxDot = this.file.VfObj.Vf_scatter.slice(-1)[0];
+
+      // axis_here.y.labelName = "log(Ie) [mA]";
+      axis_here.y.stepSize = 1;
+      // axis_here.y.maxSize = 1;
+      // axis_here.y.minSize = minDot.y;
+      axis_here.x.stepSize = 1;
+      axis_here.x.maxSize = maxDot.x;
+      axis_here.x.minSize = minDot.x;
+
+      let createChartObj = {
+        graphType,
+        data: {
+          file: this.file,
+          chartName: "Vf_Ip-graph" + this.file.name,
+          labelName: "Vf_Ip-graph" + this.file.name,
+          setDataArry: this.file.VfObj.Vf_scatter,
+          addDot: this.file.VfObj.VfDot,
+        },
+        setting: {
+          fontSize: this.fontSize,
+          axis: axis_here,
+          point: this.point,
+          chartType: this.chartType,
+        },
+        reload: 0,
+      };
+      this.display.currentDisplayGraphObj = createChartObj;
+      this.updateChart();
+    },
     initGraph_V_LogIe({ graphType }) {
+      let axis_here = this.helper._cp(this.axis);
+      let minDot = this.file.TeObj.logIe_scatter.find((dot) => {
+        return dot.y !== null;
+      });
+      let maxDot = this.file.TeObj.logIe_scatter.slice(-1)[0];
+      axis_here.y.labelName = "log(Ie) [mA]";
+      axis_here.y.stepSize = 1;
+      // axis_here.y.maxSize = maxDot.y + 2;
+      // axis_here.y.minSize = minDot.y - 2;
+      axis_here.x.stepSize = 1;
+      // axis_here.x.maxSize = maxDot.x + 2;
+      // axis_here.x.minSize = minDot.x - 2;
+      // console.log(axis_here, minDot, maxDot);
       let createChartObj = {
         graphType,
         data: {
@@ -824,7 +949,7 @@ export default {
         },
         setting: {
           fontSize: this.fontSize,
-          axis: this.axis,
+          axis: axis_here,
           point: this.point,
           chartType: this.chartType,
         },
@@ -950,6 +1075,14 @@ export default {
           // console.log("updated", this.display.currentDisplayGraphObj);
           this.resetAllDisplayState();
           this.display.state.isShowFromTo_Te = true;
+
+          break;
+        }
+        case displayGraphListObj.Vf_Ip.graphType: {
+          this.initGraph_Vf_Ip({ graphType: graphType_next });
+          // console.log("updated", this.display.currentDisplayGraphObj);
+          this.resetAllDisplayState();
+          this.display.state.isShowVf = true;
 
           break;
         }
@@ -1289,6 +1422,44 @@ export default {
             };
             // console.log("before", fromVal, toVal);
             this.$emit("changeTo", setToObj);
+            this.$emit("changeFrom", setFromObj);
+            this.updateChart("hard");
+          }
+          break;
+        }
+        case "Vf": {
+          if (!this.isAutoLine_Vf) {
+            //ON->OFF
+          } else {
+            //OFF->ON
+            let toVal = 0;
+            let fromVal = 0;
+            switch (this.display.currentDisplayGraphObj.graphType) {
+              case this.display.displayGraphListObj.Vf_Ip.graphType: {
+                //"V-Ip",
+                // let lineObj = this.display.currentDisplayGraphObj.data.addDot;
+                // console.log(lineObj);
+                let autoVf = this.$props.file.VfObj.Vf_auto;
+
+                // lineObj.to = autoObj.to;
+                fromVal = autoVf;
+                // toVal = autoObj.to;
+
+                break;
+              }
+            }
+            let setFromObj = {
+              changeValue: fromVal,
+              displayGraphListObj: this.display.displayGraphListObj,
+              currentDisplayGraphObj: this.display.currentDisplayGraphObj,
+            };
+            // let setToObj = {
+            //   changeValue: toVal,
+            //   displayGraphListObj: this.display.displayGraphListObj,
+            //   currentDisplayGraphObj: this.display.currentDisplayGraphObj,
+            // };
+            // console.log("before", fromVal, toVal);
+            // this.$emit("changeTo", setToObj);
             this.$emit("changeFrom", setFromObj);
             this.updateChart("hard");
           }

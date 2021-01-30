@@ -59,6 +59,7 @@
             <div v-for="file in files" :key="file.reload">
               <chart-container
                 :file="file"
+                @changeVal="setChange('val', $event, file)"
                 @changeFrom="setChange('from', $event, file)"
                 @changeTo="setChange('to', $event, file)"
               ></chart-container>
@@ -392,6 +393,7 @@ export default {
         let from_Isat = file.isatDataObj.isatData_leastLineObj.from;
         let to_Te = file.TeObj.logIe_leastLineObj.to;
         let from_Te = file.TeObj.logIe_leastLineObj.from;
+        let from_Vf = file.VfObj.Vf_act;
         // console.log("init-Isat", from_Isat, to_Isat);
         // console.log("init-Te", from_Te, to_Te);
         //swit
@@ -403,6 +405,14 @@ export default {
             // to_Te
             if (typeVal === "from") from_Te = changeValue;
             if (typeVal === "to") to_Te = changeValue;
+            break;
+          }
+          case displayGraphListObj.Vf_Ip.graphType: {
+            //"V-Ip",
+            // leastLineObj_origin = file.TeObj.logIe_leastLineObj;
+            // dataArry = file.TeObj.logIe_arry;
+            // to_Te
+            if (typeVal === "from") from_Vf = changeValue;
             break;
           }
           case displayGraphListObj.V_LogIe.graphType: {
@@ -466,68 +476,40 @@ export default {
           case displayGraphListObj.V_Ip.graphType: {
             //"V-Ip",
 
-            //set Te
-            let dataArry_Te = file.TeObj.logIe_arry;
-            let leastLineObj_new = syncLeastLineObj({
-              originArry: dataArry_Te,
-              from: from_Te,
-              to: to_Te,
-            });
-            file.TeObj.func_setLeastLineObj(leastLineObj_new);
-            // file.TeObj.logIe_leastLineObj =
-            // console.log(
-            //   "settted",
-            //   file.TeObj.logIe_leastLineObj.from,
-            //   file.TeObj.logIe_leastLineObj.to
-            // );
+            file
+              .reCalclator()
+              .init({ currentFile: file })
+              .setTe_from_to({ from: from_Te, to: to_Te });
+
+            break;
+          }
+          case displayGraphListObj.Vf_Ip.graphType: {
+            //"Vf-Ip",
+
+            //set Vf
+            file
+              .reCalclator()
+              .init({ currentFile: file })
+              .setVf(from_Vf);
 
             break;
           }
           case displayGraphListObj.V_LogIe.graphType: {
             // "V-Log(Ie)",
-            let dataArry_Te = file.TeObj.logIe_arry;
-            let leastLineObj_new = syncLeastLineObj({
-              originArry: dataArry_Te,
-              from: from_Te,
-              to: to_Te,
-            });
-            file.TeObj.func_setLeastLineObj(leastLineObj_new);
-            // file.TeObj.logIe_leastLineObj = syncLeastLineObj({
-            //   originArry: dataArry_Te,
-            //   from: from_Te,
-            //   to: to_Te,
-            // });
+
+            file
+              .reCalclator()
+              .init({ currentFile: file })
+              .setTe_from_to({ from: from_Te, to: to_Te });
+
             break;
           }
           case displayGraphListObj.Vp_dIpdVp.graphType: {
             //"Vp-dIp/dVp",
-
-            let dataArry_isat = file.isatDataObj.isatData_arry;
-            let dataArry_diff = file.isatDataObj.diffData_arry;
-
-            let leastLineObj_new = syncLeastLineObj({
-              originArry: dataArry_isat,
-              from: from_Isat,
-              to: to_Isat,
-            });
-            file.isatDataObj.func_setLeastLineObj(leastLineObj_new);
-
-            // file.isatDataObj.diffData_leastLineObj = syncLeastLineObj({
-            //   originArry: dataArry_diff,
-            //   from: from_Isat,
-            //   to: to_Isat,
-            // });
-            // file.isatDataObj.isatData_leastLineObj =syncLeastLineObj({
-            //   originArry: dataArry_isat,
-            //   from: from_Isat,
-            //   to: to_Isat,
-            // });
-            //Teデータ更新
-            file.TeObj = this.calcTe({
-              VfObj: file.VfObj,
-              isatDataObj: file.isatDataObj,
-              formatTextArry: file.formatText,
-            });
+            file
+              .reCalclator()
+              .init({ currentFile: file })
+              .setIis_from_to({ from: from_Isat, to: to_Isat });
 
             break;
           }
@@ -536,34 +518,11 @@ export default {
           }
           case displayGraphListObj.V_Iis.graphType: {
             //"V-Iis",
-            let dataArry_isat = file.isatDataObj.isatData_arry;
-            let dataArry_diff = file.isatDataObj.diffData_arry;
-            // console.log("from_Isat", from_Isat, to_Isat);
+            file
+              .reCalclator()
+              .init({ currentFile: file })
+              .setIis_from_to({ from: from_Isat, to: to_Isat });
 
-            let leastLineObj_new = syncLeastLineObj({
-              originArry: dataArry_isat,
-              from: from_Isat,
-              to: to_Isat,
-            });
-            file.isatDataObj.func_setLeastLineObj(leastLineObj_new);
-
-            // file.isatDataObj.diffData_leastLineObj = syncLeastLineObj({
-            //   originArry: dataArry_diff,
-            //   from: from_Isat,
-            //   to: to_Isat,
-            // });
-            // file.isatDataObj.isatData_leastLineObj = syncLeastLineObj({
-            //   originArry: dataArry_isat,
-            //   from: from_Isat,
-            //   to: to_Isat,
-            // });
-
-            //Teデータ更新
-            file.TeObj = this.calcTe({
-              VfObj: file.VfObj,
-              isatDataObj: file.isatDataObj,
-              formatTextArry: file.formatText,
-            });
             break;
           }
           case displayGraphListObj.test.graphType: {
@@ -580,6 +539,10 @@ export default {
           break;
         }
         case "to": {
+          displayLeastGraphChanger_tofrom("to");
+          break;
+        }
+        case "val": {
           displayLeastGraphChanger_tofrom("to");
           break;
         }
@@ -750,6 +713,7 @@ export default {
                 VsObj,
                 debyLength,
                 reload: id,
+                reCalclator: this.reCalclator,
               };
 
               this.$store.dispatch("main/initChartList", {
@@ -1508,6 +1472,149 @@ export default {
     },
 
     //action
+    reCalclator() {
+      let top = {
+        //init data
+        that: {},
+        currentFile: {},
+        fileName: null,
+        formatTextArry: null,
+
+        // VfObj: {},
+        // isatDataObj: {},
+        // TeObj: {},
+        // NeObj: {},
+        // VsObj: {},
+        init({ currentFile }) {
+          this.initCurrentFile(currentFile);
+
+          return this;
+        },
+        initThis(that) {
+          this.that = that;
+        },
+        initCurrentFile(currentFile) {
+          console.log("init current file");
+          // console.log(currentFile);
+          this.currentFile = currentFile;
+          this.formatTextArry = currentFile.formatText;
+          this.fileName = currentFile.fileName;
+        },
+        reCalc() {},
+        testPrint() {
+          console.log("test");
+        },
+
+        //setter
+
+        //set params
+        //パラメータを更新して、オブジェクトを更新する
+        setVf(VfVal) {
+          this.currentFile.VfObj.Vf_act = VfVal;
+
+          this.currentFile.VfObj.VfDot = [{ x: VfVal, y: 0 }]; //画面描画更新
+          this.setVfObj(this.currentFile.VfObj);
+        },
+        setTe_from_to({ from, to }) {
+          let logIe_arry = this.currentFile.TeObj.logIe_arry;
+          let leastLineObj_new = this.that.createLeastSquareMethodLine({
+            originArry: logIe_arry,
+            from,
+            to,
+            isExtendLine: true,
+          });
+          let TeObj = this.currentFile.TeObj.func_setLeastLineObj(
+            leastLineObj_new
+          );
+          this.setTeObj(TeObj);
+        },
+        setIis_from_to({ from, to }) {
+          let isatData_arry = this.currentFile.isatDataObj.isatData_arry;
+          let leastLineObj_new = this.that.createLeastSquareMethodLine({
+            originArry: isatData_arry,
+            from,
+            to,
+            isExtendLine: true,
+          });
+          let isatDataObj = this.currentFile.isatDataObj.func_setLeastLineObj(
+            leastLineObj_new
+          );
+          console.log;
+          this.setIsatDataObj(isatDataObj);
+        },
+
+        //set obj
+        //更新するオブジェクトの依存関係を再計算することで解消
+        setVfObj(obj) {
+          //insert
+          this.currentFile.VfObj = obj;
+
+          //init
+          let VfObj = this.currentFile.VfObj;
+          let formatTextArry = this.formatTextArry;
+          let chartName = this.fileName;
+          let isatDataObj = this.that.calcIonSatAct({
+            chartName,
+            VfObj,
+            formatTextArry,
+          });
+
+          //set
+          this.setIsatDataObj(isatDataObj);
+        },
+
+        setIsatDataObj(obj) {
+          //insert
+          this.currentFile.isatDataObj = obj;
+          //init
+          let isatDataObj = this.currentFile.isatDataObj;
+          let VfObj = this.currentFile.VfObj;
+          let formatTextArry = this.formatTextArry;
+          let TeObj = this.that.calcTe({
+            VfObj,
+            isatDataObj,
+            formatTextArry,
+          });
+          // let NeObj = this.that.calcNe({ isatDataObj, TeObj });
+
+          //set
+          this.setTeObj(TeObj);
+          // this.setNeObj(NeObj);
+        },
+        setTeObj(obj) {
+          //insert
+          this.currentFile.TeObj = obj;
+
+          //init
+          let formatTextArry = this.formatTextArry;
+          let TeObj = this.currentFile.TeObj;
+          let VfObj = this.currentFile.VfObj;
+          let isatDataObj = this.currentFile.isatDataObj;
+          let NeObj = this.that.calcNe({ isatDataObj, TeObj });
+          let VsObj = this.that.calcVs({ formatTextArry, VfObj, TeObj });
+          let debyLength = this.that.calcDebyLength({ NeObj, TeObj });
+
+          //set
+          this.setNeObj(NeObj);
+          this.setVsObj(VsObj);
+          this.setDebyLength(debyLength);
+        },
+        setNeObj(obj) {
+          //insert
+          this.currentFile.NeObj = obj;
+        },
+        setVsObj(obj) {
+          //insert
+          this.currentFile.VsObj = obj;
+        },
+        setDebyLength(obj) {
+          //insert
+          this.currentFile.debyLength = obj;
+        },
+      };
+      top.initThis(this);
+      return top;
+    },
     calcVf({ formatTextArry, TeObj }) {
       /**
        * @param {Array} formatTextArry [[0,0],...]
@@ -1519,6 +1626,8 @@ export default {
         checkVoltArry: [],
         currentY: 0,
         meanFloatVolt: 0,
+        VfDisplayArry: [],
+        VfDot: 0,
         //setting
         threshold_currentRate: 1.5, //増加率が１０以上
         threshold_maxY: 0.6, // 電流の絶対値が0.6以下のものを正しい数値とする
@@ -1532,6 +1641,7 @@ export default {
           this.rmError_volt();
           this.rmError_same();
           this.calcMeanFloatVolt();
+          this.calcVfScatter();
           // this.printTest();
         },
 
@@ -1544,32 +1654,14 @@ export default {
               let [nx, ny] = arr[i + 1];
               let ca_coord = (cy - by) / (cx - bx);
               let na_coord = (ny - cy) / (nx - cx);
-              // console.log("ca_coord", cx, ca_coord, na_coord);
-              // console.log(by, cy);
-              // if (Math.abs(cy) < this.threshold_maxY) {
-              // console.log(
-              //   "cyyy",
-              //   Math.abs(cy),
-              //   Math.abs(ca_coord) > this.threshold_currentRate,
-              //   Math.abs(na_coord) > this.threshold_currentRate,
-              //   by,
-              //   cy,
-              //   by < 0 && cy > 0,
-              //   by > 0 && cy < 0
-              // );
-              // if (
-              //   Math.abs(ca_coord) > this.threshold_currentRate &&
-              //   Math.abs(na_coord) > this.threshold_currentRate
-              // ) {
-              //   //飛び出てたデータを検出
-              //   // console.log('except',[bx, by], [cx, cy]);
-              //   //none
-              // }
-              if (by < 0 && cy > 0) {
+              // console.log("bcn", by, cy, by < 0, cy > 0);
+              // console.log("bcn", by, cy);
+              // console.log("bcn", [bx, by], [cx, cy], [nx, ny]);
+              if (by <= 0 && cy >= 0) {
                 this.checkVoltArry.push([bx, by]);
                 this.checkVoltArry.push([cx, cy]);
                 this.currentY = cy;
-              } else if (by > 0 && cy < 0) {
+              } else if (by >= 0 && cy <= 0) {
                 if (by === this.currentY) this.checkVoltArry.push([cx, cy]);
                 else {
                   this.checkVoltArry.push([bx, by]);
@@ -1635,13 +1727,51 @@ export default {
             });
           }
         },
+        rmError_current(arry, threshold) {
+          /**
+           * arry:二次元配列[[volt,current],[]...]
+           * threshold: 増加率閾値
+           */
+          return arry.filter((dot, i, arr) => {
+            if (i > 0 && i < arry.length - 2) {
+              let [bx, by] = arr[i - 1];
+              let [cx, cy] = dot;
+              let [nx, ny] = arr[i + 1];
+
+              let ca_coord = (cy - by) / (cx - bx);
+              let na_coord = (ny - cy) / (nx - cx);
+              // console.log("a_coord", ca_coord, na_coord);
+              if (
+                Math.abs(ca_coord) > threshold &&
+                Math.abs(na_coord) > threshold
+              ) {
+                //飛び出している点を検出
+                console.error("remooved", dot);
+                return false;
+              } else {
+                return true;
+              }
+            } else {
+              return false;
+            }
+          });
+        },
         rmError_volt() {
           //電圧の差でエラーを判別
-          let aveY =
-            this.checkVoltArry.reduce((acc, val) => {
-              acc[1] += val[1];
-              return acc;
-            })[1] / this.checkVoltArry.length;
+          try {
+            let aveY =
+              this.checkVoltArry.reduce((acc, val) => {
+                acc[1] += val[1];
+                return acc;
+              })[1] / this.checkVoltArry.length;
+          } catch {
+            window.alert("浮遊電位絵計算エラー:手動で決定してください");
+            this.checkVoltArry = [
+              [0, 0],
+              [1, 1],
+            ];
+            return this.checkVoltArry;
+          }
           let ascY = this._cp(this.checkVoltArry)
             .map((val) => {
               return [val[0], Math.abs(val[1])];
@@ -1686,6 +1816,64 @@ export default {
               return (acc += val);
             }) / voltArry.length;
         },
+        calcVfScatter() {
+          let vf = this.meanFloatVolt;
+          let vfCenter_i = 0;
+          let vfMin_i = 0;
+          let vfMax_i = 0;
+
+          let VfDot = this.originArry.reduce((acc, val, i) => {
+            if (Math.abs(acc[0] - vf) < Math.abs(val[0] - vf)) {
+              // vf_i = i;
+              return acc;
+            } else {
+              vfCenter_i = i;
+              return val;
+            }
+          });
+          // console.log(this.originArry);
+          // console.log("vfP", VfDot, vf_i);
+          VfDot[1] = 0;
+          this.VfDot = VfDot;
+          let maxY = 3;
+
+          let VfAreaRange = 5; //Vf＋ー５Vの範囲を表示用とする
+          let VfAreaMinDot = this.originArry.reduce((acc, val, i) => {
+            if (
+              Math.abs(acc[0] - vf + VfAreaRange) <
+              Math.abs(val[0] - vf + VfAreaRange)
+            ) {
+              // vf_i = i;
+              return acc;
+            } else {
+              vfMin_i = i;
+              return val;
+            }
+          });
+          let VfAreaMaxDot = this.originArry.reduce((acc, val, i) => {
+            if (Math.abs(acc[1] - maxY) < Math.abs(val[1] - maxY)) {
+              // vf_i = i;
+              return acc;
+            } else {
+              vfMax_i = i;
+              return val;
+            }
+            // return Math.abs(acc[0] - vf - VfAreaRange) <
+            //   Math.abs(val[0] - vf - VfAreaRange)
+            //   ? acc
+            //   : val;
+          });
+          // console.log("minmax", VfAreaMinDot, VfDot, VfAreaMaxDot);
+          this.VfDisplayArry = this.originArry.slice(vfMin_i, vfMax_i + 1);
+          this.VfDisplayArry = this.rmError_current(this.VfDisplayArry, 5);
+          // console.log(
+          //   "VfDisplayArry",
+          //   this.VfDisplayArry,
+          //   vfMin_i,
+          //   vfMax_i + 1
+          // );
+        },
+
         printTest() {
           // console.log("checkVoltArry:", this.checkVoltArry);
           this.checkVoltArry.forEach((val) => {
@@ -1697,6 +1885,12 @@ export default {
         },
         getMeanFloatVolt() {
           return this.meanFloatVolt;
+        },
+        getVfDisplayArry() {
+          return this.VfDisplayArry;
+        },
+        getVfDot() {
+          return this.VfDot;
         },
         _cp(arr) {
           return JSON.parse(JSON.stringify(arr));
@@ -1766,10 +1960,18 @@ export default {
         console.log("[Result] Vf_calc", Vf_calc.toPrecision(4));
       }
 
+      //vf scatterdata
+      let Vf_scatter = this.data2ScatterData(top.getVfDisplayArry());
+      let VfDot = this.data2ScatterData([top.getVfDot()]);
+
       //create Obj
       let VfObj = {
         Vf_act: meanFloatVolt,
+        Vf_auto: meanFloatVolt,
+
         Vf_calc,
+        VfDot: VfDot,
+        Vf_scatter: Vf_scatter,
       };
       return VfObj;
     },
@@ -2105,6 +2307,7 @@ export default {
         this.diffData_leastLineObj = leastLineObj_input;
         this.isat = calcIsat_realTime(leastLineObj_input);
         this.Jsat = this.isat / area;
+        return this;
       };
 
       //create obj
@@ -2303,6 +2506,7 @@ export default {
         //変更を更新
         this.logIe_leastLineObj = leastLineObj_input;
         this.Te = calcTe_realTime(leastLineObj_input);
+        return this;
       };
       //create Object
       let TeObj = {
