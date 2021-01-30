@@ -1124,14 +1124,14 @@ export default {
           }
 
           //current check field
-          if (isIonField) {
-            if (Math.abs(cy) < threshold_maxY && cy > 0) isIonField = false;
-            if (cy > 0) {
-              val.unshift("ion+");
-              excepted.push(val);
-              return false;
-            }
-          }
+          // if (isIonField) {
+          if (by > 0 && cy > 0 && ny > 0) isIonField = false;
+          //   if (cy > 0) {
+          //     val.unshift("ion+");
+          //     excepted.push(val);
+          //     return false;
+          //   }
+          // }
 
           if (
             (Math.abs(ca_coord) > threshold_currentRate_ion ||
@@ -1688,16 +1688,16 @@ export default {
                 // console.log("ca_coord", ca_coord, na_coord);
                 // console.log(by, cy);
                 if (Math.abs(cy) < this.threshold_maxY) {
-                  // console.log(
-                  //   "cyyy",
-                  //   Math.abs(cy),
-                  //   Math.abs(ca_coord) > this.threshold_currentRate,
-                  //   Math.abs(na_coord) > this.threshold_currentRate,
-                  //   by,
-                  //   cy,
-                  //   by < 0 && cy > 0,
-                  //   by > 0 && cy < 0
-                  // );
+                  console.log(
+                    "cyyy",
+                    Math.abs(cy),
+                    Math.abs(ca_coord) > this.threshold_currentRate,
+                    Math.abs(na_coord) > this.threshold_currentRate,
+                    by,
+                    cy,
+                    by < 0 && cy > 0,
+                    by > 0 && cy < 0
+                  );
                   if (
                     Math.abs(ca_coord) > this.threshold_currentRate ||
                     Math.abs(na_coord) > this.threshold_currentRate
@@ -1766,11 +1766,13 @@ export default {
               })[1] / this.checkVoltArry.length;
           } catch {
             window.alert("浮遊電位絵計算エラー:手動で決定してください");
+            let index = 0;
+            // console.log(this.checkVoltArry);
+
             this.checkVoltArry = [
-              [0, 0],
-              [1, 1],
+              [10, 10],
+              [11, 11],
             ];
-            return this.checkVoltArry;
           }
           let ascY = this._cp(this.checkVoltArry)
             .map((val) => {
