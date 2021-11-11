@@ -6,7 +6,30 @@
         <v-list-item-content>
           <v-list-item-title class="title"> Calculator </v-list-item-title>
           <v-list-item-subtitle>
-            Langmuir probe diagnostic
+            <div>
+              Langmuir probe diagnostic
+              <br />
+              <br />
+              Copyright (c) 2020
+              <br />
+              Ryohei Kurebayashi
+              <br />
+
+              <v-icon>mail</v-icon>
+              ryohei.kure@gmail.com
+              <br />
+
+              <a href="https://opensource.org/licenses/mit-license.php"
+                >The MIT license</a
+              >
+              <br />
+              <br />
+
+              <a
+                href="https://github.com/kkrsky/langmuir_probe_diagnostic/issues"
+                >Issues</a
+              >
+            </div>
           </v-list-item-subtitle>
         </v-list-item-content>
       </v-list-item>
@@ -291,8 +314,8 @@ export default {
       titleList: {
         calc: { name: "calc", icon: "mdi-calculator" },
         setting: { name: "setting", icon: "mdi-import" },
-        test: { name: "test", icon: "mdi-pen" },
-        testLoad: { name: "testLoad_start", icon: "mdi-pen" },
+        // test: { name: "test", icon: "mdi-pen" },
+        // testLoad: { name: "testLoad_start", icon: "mdi-pen" },
       },
 
       ////////////////////////////
@@ -382,11 +405,8 @@ export default {
         };
         //parser
         // console.log("changeObj", changeObj);
-        let {
-          changeValue,
-          displayGraphListObj,
-          currentDisplayGraphObj,
-        } = changeObj;
+        let { changeValue, displayGraphListObj, currentDisplayGraphObj } =
+          changeObj;
         let leastLineObj_origin = null;
         let dataArry = null;
         let to_Isat = file.isatDataObj.isatData_leastLineObj.to;
@@ -487,10 +507,7 @@ export default {
             //"Vf-Ip",
 
             //set Vf
-            file
-              .reCalclator()
-              .init({ currentFile: file })
-              .setVf(from_Vf);
+            file.reCalclator().init({ currentFile: file }).setVf(from_Vf);
 
             break;
           }
@@ -1523,9 +1540,8 @@ export default {
             to,
             isExtendLine: true,
           });
-          let TeObj = this.currentFile.TeObj.func_setLeastLineObj(
-            leastLineObj_new
-          );
+          let TeObj =
+            this.currentFile.TeObj.func_setLeastLineObj(leastLineObj_new);
           this.setTeObj(TeObj);
         },
         setIis_from_to({ from, to }) {
@@ -1536,9 +1552,8 @@ export default {
             to,
             isExtendLine: true,
           });
-          let isatDataObj = this.currentFile.isatDataObj.func_setLeastLineObj(
-            leastLineObj_new
-          );
+          let isatDataObj =
+            this.currentFile.isatDataObj.func_setLeastLineObj(leastLineObj_new);
           console.log;
           this.setIsatDataObj(isatDataObj);
         },
@@ -2296,7 +2311,7 @@ export default {
         return Math.abs(isat);
       };
       let that = this;
-      let func_setLeastLineObj = function(leastLineObj_input) {
+      let func_setLeastLineObj = function (leastLineObj_input) {
         /**
          * //this->TeObj
           // console.log(this);
@@ -2497,7 +2512,7 @@ export default {
 
       Te = calcTe_realTime(leastLineObj_Te);
 
-      let func_setLeastLineObj = function(leastLineObj_input) {
+      let func_setLeastLineObj = function (leastLineObj_input) {
         /**
          * //this->TeObj
           // console.log(this);
